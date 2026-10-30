@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf7ec">
+  <meta name="description" content="一些有趣的小东西：这里有一片会动的海，和一些慢慢长出来的奇思妙想。">
+  <title>一些有趣的小东西 · qiyu.dev</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" as="image" href="assets/hero/hero-seaside-desktop-1200.webp"
+        imagesrcset="assets/hero/hero-seaside-desktop-1200.webp 1200w, assets/hero/hero-seaside-desktop.webp 1774w"
+        imagesizes="(min-width: 1240px) 1260px, calc(100vw - 16px)" media="(min-width: 641px)">
+  <link rel="stylesheet" href="styles.css">
+  <script src="hero-water.js" defer></script>
+  <script src="postcard.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+
+  <header class="site-header shell">
+    <a class="wordmark" href="./" aria-label="qiyu.dev · 返回首页">qiyu<span>.dev</span></a>
+  </header>
+
+  <main id="main">
+    <section class="intro shell" aria-labelledby="intro-title">
+      <div class="intro-text">
+        <p class="eyebrow">小作品收藏</p>
+        <h1 id="intro-title">一些有趣的<br>小东西</h1>
+        <p class="lead">这里有一片会动的海，和一些慢慢长出来的奇思妙想。</p>
+      </div>
+      <!-- 旅行手账角落：明信片用纸胶带贴在折叠地图上，柠檬枝垂在地图一角 -->
+      <div class="journal">
+        <img class="journal-map" src="assets/journal/map.webp" width="359" height="437" alt="">
+        <!-- 可以翻面的明信片：正面是原插画，背面用 CSS 画成米白纸张；地图、胶带、柠檬枝都不随之转动 -->
+        <button class="journal-postcard" type="button" aria-label="明信片：海边露台与海湾。点一下翻到背面" title="点一下，翻到背面">
+          <span class="postcard-inner">
+            <img class="postcard-front" src="assets/journal/postcard.webp" width="377" height="258" alt="">
+            <span class="postcard-back" aria-hidden="true">
+              <span class="postcard-message">风从海上来，<br>带来一点新的灵感。</span>
+              <span class="postcard-stamp">
+                <svg viewBox="0 0 40 48" aria-hidden="true">
+                  <rect width="40" height="48" fill="#d6ecf7"/>
+                  <circle cx="28" cy="14" r="6" fill="#f3c63f"/>
+                  <path d="M0 30c6-4 10 3 16 0s10-4 16 0 8 1 8 1V48H0Z" fill="#1f6fa8"/>
+                  <path d="M0 37c6-3 10 2 16 0s10-3 16 0 8 1 8 1" fill="none" stroke="#fbf7ec" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M13 28V14l7 13Z" fill="#fffdf7"/>
+                </svg>
+              </span>
+              <span class="postcard-postmark">qiyu.dev</span>
+              <span class="postcard-lines"></span>
+              <svg class="postcard-doodle" viewBox="0 0 90 26" aria-hidden="true">
+                <path d="M2 18c8-7 14 5 22-1s14 5 22-1 14 5 22-1 12 4 20 0" fill="none" stroke="#1f6fa8" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M30 13c4-8 12-10 18-6-5 1-9 4-11 9Z" fill="#4f8f3f" opacity=".85"/>
+                <circle cx="56" cy="9" r="4.2" fill="#f3c63f"/>
+              </svg>
+            </span>
+          </span>
+        </button>
+        <img class="journal-tape journal-tape-a" src="assets/journal/washi-tape.webp" width="267" height="52" alt="">
+        <img class="journal-tape journal-tape-b" src="assets/journal/washi-tape.webp" width="267" height="52" alt="">
+        <img class="journal-lemon" src="assets/decor/lemon-branch.png" width="187" height="210" alt="">
+      </div>
+      <img class="decor decor-gull" src="assets/decor/seagull.png" width="143" height="82" alt="">
+
+      <!-- 海景四周用水彩边缘遮罩渐隐进纸面；遮罩作用在整个 figure 上，底图与 WebGL 画布一起淡出 -->
+      <figure class="panorama" id="seaside">
+        <picture>
+          <source media="(max-width: 640px)" srcset="assets/hero/hero-seaside-mobile-crop.webp" width="665" height="887">
+          <img src="assets/hero/hero-seaside-desktop-1200.webp"
+               srcset="assets/hero/hero-seaside-desktop-1200.webp 1200w, assets/hero/hero-seaside-desktop.webp 1774w"
+               sizes="(min-width: 1240px) 1260px, calc(100vw - 16px)"
+               width="1774" height="887" fetchpriority="high"
+               alt="水彩画：柠檬藤架下的石砌露台，一只猫趴在矮墙上晒太阳，远处是蓝色海湾、帆船和山坡上的白色灯塔。">
+        </picture>
+        <!-- 站在画中矮墙上的海鸥：放在海景图层里，随插画一起缩放、羽化 -->
+        <img class="wall-gull" src="assets/decor/perched-gull.webp" width="235" height="189" alt="">
+        <figcaption class="water-hint" hidden>
+          <span aria-hidden="true">〰</span> <span class="water-hint-text">海面是活的：移动鼠标拨动水波，点一下泛起涟漪</span>
+        </figcaption>
+      </figure>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <!-- 页脚海浪：两层半透明水彩浪，向下渐渐淡回纸面；帆船停在前层浪峰上，船底被浪没过一点 -->
+    <div class="footer-sea" aria-hidden="true">
+      <svg class="footer-wave" viewBox="0 0 1440 110" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="wave-back" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#cfe7f3" stop-opacity=".7"/>
+            <stop offset=".75" stop-color="#e3f1f6" stop-opacity="0"/>
+          </linearGradient>
+          <filter id="wash" x="-2%" y="-30%" width="104%" height="160%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.015 0.09" numOctaves="2" seed="4"/>
+            <feDisplacementMap in="SourceGraphic" scale="6"/>
+          </filter>
+        </defs>
+        <path d="M0 30 C 80 36 120 40 170 40 C 270 40 350 16 450 16 C 550 16 630 40 730 40 C 830 40 910 16 1010 16 C 1110 16 1190 40 1290 40 C 1360 40 1410 34 1440 30 V110 H0Z" fill="url(#wave-back)" filter="url(#wash)"/>
+        <path d="M0 30 C 80 36 120 40 170 40 C 270 40 350 16 450 16 C 550 16 630 40 730 40 C 830 40 910 16 1010 16 C 1110 16 1190 40 1290 40 C 1360 40 1410 34 1440 30" fill="none" stroke="#1f6fa8" stroke-opacity=".12" stroke-width="1.2" filter="url(#wash)"/>
+      </svg>
+      <img class="decor decor-boat" src="assets/decor/sailboat.png" width="107" height="164" alt="">
+      <svg class="footer-wave" viewBox="0 0 1440 110" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="wave-front" x1="0" y1="0" x2="0" y2="1">
+            <stop offset=".2" stop-color="#b9dcee" stop-opacity=".8"/>
+            <stop offset=".9" stop-color="#e3f1f6" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="M0 34 C 60 28 110 26 170 26 C 260 26 350 56 450 56 C 550 56 640 26 730 26 C 820 26 910 56 1010 56 C 1110 56 1200 26 1290 26 C 1360 26 1410 30 1440 34 V110 H0Z" fill="url(#wave-front)" filter="url(#wash)"/>
+        <path d="M0 34 C 60 28 110 26 170 26 C 260 26 350 56 450 56 C 550 56 640 26 730 26 C 820 26 910 56 1010 56 C 1110 56 1200 26 1290 26 C 1360 26 1410 30 1440 34" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="2.2" stroke-linecap="round" filter="url(#wash)"/>
+        <path d="M0 34 C 60 28 110 26 170 26 C 260 26 350 56 450 56 C 550 56 640 26 730 26 C 820 26 910 56 1010 56 C 1110 56 1200 26 1290 26 C 1360 26 1410 30 1440 34" fill="none" stroke="#1f6fa8" stroke-opacity=".18" stroke-width="1.2" transform="translate(0 1.6)" filter="url(#wash)"/>
+      </svg>
+    </div>
+    <div class="footer-inner shell">
+      <p class="footer-copy">© 2026 qiyu.dev</p>
+      <a class="footer-top" href="#main">回到顶部 <span aria-hidden="true">↑</span></a>
+    </div>
+  </footer>
+</body>
+</html>

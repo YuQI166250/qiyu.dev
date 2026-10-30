@@ -1,0 +1,349 @@
+:root {
+  --paper: #fbf7ec;
+  --card: #fffdf7;
+  --ink: #1d4b6b;
+  --muted: #557587;
+  --sea: #1f6fa8;
+  --sea-light: #d6ecf7;
+  --leaf: #4f8f3f;
+  --leaf-soft: #e3f0d3;
+  --sun: #f3c63f;
+  --sun-soft: #fdf0c2;
+  --line: #e4e6dc;
+  --serif: "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "Songti SC", "STSong", "SimSun", serif;
+  --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+  --radius-lg: 28px;
+  --radius-md: 20px;
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; }
+figure { margin: 0; }
+
+:focus-visible { outline: 3px solid var(--sea); outline-offset: 4px; border-radius: 6px; }
+
+.shell { width: min(1160px, calc(100% - 48px)); margin-inline: auto; }
+
+.skip-link {
+  position: absolute; left: 16px; top: -60px; z-index: 10;
+  padding: 10px 16px; border-radius: 999px;
+  background: var(--sea); color: #fff; text-decoration: none;
+}
+.skip-link:focus { top: 12px; }
+
+/* 页头 */
+.site-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 0;
+}
+.wordmark { font-size: 24px; font-weight: 700; letter-spacing: .5px; text-decoration: none; }
+.wordmark span { color: var(--sea); }
+.site-header nav a {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px;
+  border-radius: 999px; text-decoration: none; font-size: 15px;
+  transition: background-color .2s;
+}
+.site-header nav a:hover { background: var(--sea-light); }
+
+/* 首屏 */
+.intro { position: relative; padding-top: clamp(16px, 4vw, 48px); padding-bottom: clamp(40px, 5vw, 72px); }
+.intro-text { position: relative; z-index: 1; max-width: 620px; }
+.eyebrow {
+  display: inline-block; margin: 0 0 14px; padding: 2px 14px;
+  border-radius: 999px; background: var(--sun-soft);
+  color: #7a5b0c; font-size: 14px; letter-spacing: 1px;
+}
+.intro h1 {
+  margin: 0; font-family: var(--serif); font-weight: 700;
+  font-size: clamp(40px, 6.2vw, 76px); line-height: 1.18; letter-spacing: 2px;
+}
+.lead { margin: 18px 0 26px; font-size: clamp(16px, 1.6vw, 18px); color: var(--muted); }
+/* 无边界海景：去掉圆角、阴影和底色，四周用水彩边缘遮罩渐隐进纸面。
+   遮罩作用在整个 figure 上——底图、WebGL 画布、飞过的海鸥、提示一起被羽化，始终对齐。
+   左右略微伸出内容区，上沿向标题区轻轻上提（淡出部分不会盖住文字）。 */
+.panorama {
+  position: relative; z-index: 0;
+  margin-top: clamp(-20px, -1.2vw, -6px);
+  margin-inline: max(-60px, calc((100% - 100vw) * .4));
+  overflow: hidden;
+  -webkit-mask: url(assets/hero/panorama-edge-desktop.png) 0 0 / 100% 100% no-repeat;
+  mask: url(assets/hero/panorama-edge-desktop.png) 0 0 / 100% 100% no-repeat;
+}
+
+/* 标题区到海景之间铺一层很淡的水彩晕染：手账后有一点阳光黄，海景上沿透出海蓝，左侧带一点叶绿 */
+.intro::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  left: -20px; right: -20px; top: 4%; height: 64%;
+  background:
+    radial-gradient(26% 30% at 80% 26%, rgb(253 240 194 / .7), transparent 70%),
+    radial-gradient(48% 34% at 58% 64%, rgb(196 226 243 / .62), transparent 72%),
+    radial-gradient(30% 30% at 16% 66%, rgb(220 237 200 / .6), transparent 70%);
+}
+.panorama picture img { width: 100%; aspect-ratio: 2.35 / 1; object-fit: cover; object-position: 50% 62%; }
+
+/* 海水互动：画布叠在插画上，竖向滑动仍交给页面滚动 */
+.panorama .water {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; transition: opacity .8s ease;
+  touch-action: pan-y pinch-zoom; cursor: crosshair;
+}
+.flying-gull {
+  position: absolute; left: 0; top: 0; z-index: 1; height: auto;
+  opacity: 0; pointer-events: none; will-change: transform;
+}
+.panorama .water.is-live { opacity: 1; }
+/* 站在矮墙右段上的海鸥：left/top 是画中墙顶的落脚点（按图片比例换算到画框百分比），
+   translate 让脚尖（图片宽 64%、底部）正好落在这一点上 */
+.wall-gull {
+  position: absolute; z-index: 1; left: 59.1%; top: 82.8%; width: 5%; height: auto;
+  transform: translate(-64%, -98%);
+  filter: drop-shadow(1px 2px 1.5px rgb(110 85 50 / .28));
+  pointer-events: none; user-select: none;
+}
+.water-hint {
+  position: absolute; z-index: 2; right: 8%; bottom: 23%;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 999px;
+  background: rgb(251 247 236 / .86); color: var(--ink);
+  font-size: 14px; line-height: 1.5;
+  box-shadow: 0 4px 12px rgb(29 75 107 / .14);
+  pointer-events: none;
+}
+.water-hint[hidden] { display: none; }
+.water-hint { display: none; } /* 暂时隐藏操作提示；海水交互不受影响 */
+.water-hint span[aria-hidden] { color: var(--sea); }
+
+/* 透明装饰：只做点缀，不接收点击 */
+.decor { position: absolute; pointer-events: none; user-select: none; }
+.decor-gull { top: 112px; right: 43%; width: 84px; animation: glide 9s ease-in-out infinite; }
+
+/* 旅行手账角落：所有位置按容器百分比排布，随宽度整体缩放 */
+.journal {
+  position: absolute; z-index: 2; top: clamp(24px, 4vw, 56px); right: 4%;
+  width: min(450px, 40%); aspect-ratio: 470 / 360;
+  pointer-events: none; user-select: none;
+}
+.journal img { position: absolute; height: auto; }
+.journal-map {
+  right: 3%; top: 4%; width: 46%;
+  transform: rotate(8deg);
+  filter: drop-shadow(0 8px 14px rgb(29 75 107 / .13));
+}
+/* 可翻面的明信片：按钮本身只做 2D 倾斜和悬停抬起，翻面交给内层 */
+.journal-postcard {
+  --tilt: -4deg;
+  position: absolute; left: 4%; top: 34%; width: 63%;
+  display: block; margin: 0; padding: 0; border: 0; background: none;
+  color: inherit; font: inherit; cursor: pointer;
+  pointer-events: auto; perspective: 1100px;
+  transform: rotate(var(--tilt));
+  transition: transform .35s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.journal-postcard:hover { transform: rotate(var(--tilt)) translateY(-5px) scale(1.015); }
+.journal-postcard:focus-visible { outline: 3px solid var(--sea); outline-offset: 6px; border-radius: 6px; }
+.postcard-inner {
+  position: relative; display: block;
+  transform-style: preserve-3d;
+  transition: transform .9s cubic-bezier(.45, .05, .25, 1);
+}
+.journal-postcard.is-flipped .postcard-inner { transform: rotateY(180deg); }
+.journal .postcard-front {
+  position: relative; display: block; width: 100%;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  filter: drop-shadow(0 10px 18px rgb(29 75 107 / .16));
+  transition: filter .35s ease;
+}
+.journal-postcard:hover .postcard-front { filter: drop-shadow(0 16px 22px rgb(29 75 107 / .22)); }
+
+/* 背面：与正面插画里那张略微倾斜的卡片对齐（约 -8.8°，占图片 93% × 78%） */
+.postcard-back {
+  position: absolute; left: 3.45%; top: 10.5%; width: 93.1%; height: 77.9%;
+  container-type: inline-size;
+  transform: rotateY(180deg) rotate(-8.8deg);
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  border-radius: 3px;
+  background-color: #fbf3e2;
+  background-image:
+    radial-gradient(rgb(150 120 80 / .07) 0.8px, transparent 1.1px),
+    radial-gradient(rgb(255 255 255 / .5) 0.8px, transparent 1.1px);
+  background-size: 5px 5px, 7px 7px;
+  background-position: 0 0, 2px 3px;
+  box-shadow: inset 0 0 0 1px rgb(196 168 120 / .35), inset 0 0 22px rgb(196 160 104 / .22), 0 12px 20px rgb(29 75 107 / .16);
+  color: var(--ink); text-align: left;
+}
+.postcard-back::after { /* 中间的分隔线 */
+  content: ""; position: absolute; left: 56%; top: 14%; bottom: 14%;
+  border-left: 1px solid rgb(29 75 107 / .2);
+}
+.postcard-message {
+  position: absolute; left: 6%; top: 20%; width: 49%;
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "BiauKai", var(--serif);
+  font-size: 4.8cqw; line-height: 1.8; letter-spacing: .02em; color: #1d4b6b; white-space: nowrap;
+}
+.postcard-stamp {
+  position: absolute; right: 6%; top: 9%; width: 15%; aspect-ratio: 40 / 48;
+  padding: 3%; background: #fffdf7;
+  box-shadow: 0 1px 2px rgb(29 75 107 / .2);
+  /* 齿孔：边缘一圈小圆孔，中间保持完整 */
+  -webkit-mask: radial-gradient(circle, #0000 1.4px, #000 1.6px) -2.5px -2.5px / 5px 5px,
+                linear-gradient(#000 0 0) 50% / calc(100% - 5px) calc(100% - 5px) no-repeat;
+  mask: radial-gradient(circle, #0000 1.4px, #000 1.6px) -2.5px -2.5px / 5px 5px,
+        linear-gradient(#000 0 0) 50% / calc(100% - 5px) calc(100% - 5px) no-repeat;
+}
+.postcard-stamp svg { display: block; width: 100%; height: 100%; }
+.postcard-postmark {
+  position: absolute; right: 19%; top: 20%; width: 17%; aspect-ratio: 1;
+  display: grid; place-items: center;
+  border: 1.5px solid rgb(31 111 168 / .45); border-radius: 50%;
+  font-size: 3cqw; letter-spacing: .05em; color: rgb(31 111 168 / .6);
+  transform: rotate(-14deg);
+}
+.postcard-lines {
+  position: absolute; left: 62%; right: 8%; top: 50%; height: 30%;
+  background: repeating-linear-gradient(transparent 0 calc(33.3% - 1px), rgb(29 75 107 / .22) calc(33.3% - 1px) 33.3%);
+}
+.postcard-doodle { position: absolute; left: 6%; bottom: 11%; width: 30%; height: auto; }
+
+/* 翻面时纸胶带先轻轻揭起，翻好后再贴回去 */
+.journal-tape { transition: opacity .25s ease; }
+.journal.is-turning .journal-tape { opacity: 0; }
+
+@container (max-width: 160px) {
+  .postcard-back::after, .postcard-lines, .postcard-postmark, .postcard-doodle { display: none; }
+  /* 手机上卡片很小：两行字放在上方，邮票移到右下角，避开左下角的纸胶带 */
+  .postcard-message { left: 6%; top: 13%; width: auto; font-size: 9.6cqw; line-height: 1.3; letter-spacing: 0; }
+  .postcard-stamp { width: 16%; right: 6%; top: auto; bottom: 9%; }
+}
+
+/* 减少动态效果：不做 3D 旋转，改为正反面淡入淡出 */
+@media (prefers-reduced-motion: reduce) {
+  .postcard-inner, .journal-postcard.is-flipped .postcard-inner { transform: none; }
+  .postcard-back { transform: rotate(-8.8deg); opacity: 0; }
+  .journal .postcard-front, .postcard-back { transition: opacity .2s linear !important; }
+  .journal-postcard.is-flipped .postcard-back { opacity: 1; }
+  .journal-postcard.is-flipped .postcard-front { opacity: 0; }
+}
+.journal-tape { width: 22%; opacity: .88; mix-blend-mode: multiply; }
+.journal-tape-a { left: 1%; top: 80%; width: 18%; transform: rotate(-34deg); }
+.journal-tape-b { left: 52%; top: 35%; transform: rotate(30deg); }
+.journal-lemon { right: 0; top: -9%; width: 25%; transform: rotate(-12deg); transform-origin: 80% 0; }
+
+/* 作品（目前首页不展示作品，样式保留，以后加回作品列表时可直接使用） */
+.works { padding: clamp(56px, 8vw, 96px) 0 clamp(64px, 8vw, 104px); }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; margin-bottom: 28px; }
+.section-head h2 { margin: 0; font-family: var(--serif); font-size: clamp(30px, 3.4vw, 40px); letter-spacing: 2px; }
+.section-head h2::after {
+  content: ""; display: block; width: 56px; height: 6px; margin-top: 6px;
+  border-radius: 6px; background: linear-gradient(90deg, var(--sun), var(--leaf));
+}
+.section-head p { margin: 0; color: var(--muted); }
+
+.work-list {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(20px, 3vw, 40px);
+  margin: 0; padding: 0; list-style: none;
+}
+.work {
+  height: 100%; overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--radius-md);
+  background: var(--card);
+  box-shadow: 0 10px 26px rgb(29 75 107 / .08);
+}
+.work-cover { position: relative; }
+.work-cover img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.status {
+  position: absolute; left: 16px; top: 16px;
+  padding: 4px 14px; border-radius: 999px;
+  font-size: 14px; font-weight: 600; letter-spacing: 1px;
+  box-shadow: 0 4px 10px rgb(29 75 107 / .15);
+}
+.status-wip { background: var(--sun-soft); color: #7a5b0c; }
+.status-idea { background: var(--leaf-soft); color: #355f29; }
+.status-ready { background: var(--sea); color: #fff; }
+.work-body { padding: 20px 24px 24px; }
+.work-index { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: 2px; color: var(--leaf); }
+.work h3 { margin: 2px 0 8px; font-family: var(--serif); font-size: clamp(24px, 2.4vw, 28px); letter-spacing: 1px; }
+.work-desc { margin: 0 0 14px; }
+.work-meta { margin: 0; padding-top: 12px; border-top: 1px dashed var(--line); font-size: 14px; color: var(--muted); }
+
+/* 页脚 */
+/* 页脚：两层半透明水彩浪向下淡回米白纸面，没有整块纯色；文字直接落在纸面上 */
+.site-footer { position: relative; margin-top: 0; }
+.footer-sea { position: relative; height: 100px; margin-top: -36px; pointer-events: none; }
+.footer-wave { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+/* 帆船停在前层浪的浪峰（左 12% 一带，约在浪区顶部 24px 处），船底被前层浪没过一点 */
+.decor-boat { left: 11%; bottom: 58px; width: 56px; transform-origin: 50% 90%; animation: bob 6s ease-in-out infinite; }
+.footer-inner {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px 24px; flex-wrap: wrap;
+  padding: 0 0 22px; font-size: 14px;
+}
+.footer-inner p { margin: 0; }
+.footer-top { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
+.footer-top:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+@keyframes glide {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-18px, -8px) rotate(-3deg); }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-5px) rotate(2deg); }
+}
+
+/* 平板：文字区收窄，给手账角落让出位置；海鸥移到更靠右 */
+@media (min-width: 641px) {
+  .intro-text { max-width: min(620px, 56%); }
+}
+@media (max-width: 1100px) {
+  .decor-gull { display: none; }
+}
+
+/* 手机：单列、减少装饰 */
+@media (max-width: 760px) {
+  .work-list { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .site-header { padding: 14px 0; }
+  .wordmark { font-size: 21px; }
+  .intro h1 { letter-spacing: 1px; }
+  /* 手机：只留一张明信片贴在标题第二行旁，柠檬枝压在它的一角 */
+  .journal { top: 78px; right: -4px; width: clamp(96px, 27vw, 120px); aspect-ratio: auto; height: 96px; }
+  .journal-map, .journal-tape-b { display: none; }
+  .journal-postcard { --tilt: 6deg; left: 0; top: 10px; width: 100%; }
+  .journal-tape-a { left: -4%; top: 72%; width: 38%; }
+  .journal-lemon { right: -6px; top: -24px; width: 56px; transform: none; }
+  /* 手机上只留很淡的海蓝晕染，避免在明信片后形成光斑 */
+  .intro::before { background: radial-gradient(60% 30% at 50% 62%, rgb(196 226 243 / .5), transparent 72%); }
+  .panorama {
+    margin-top: 4px;
+    -webkit-mask-image: url(assets/hero/panorama-edge-mobile.png);
+    mask-image: url(assets/hero/panorama-edge-mobile.png);
+  }
+  .panorama picture img { aspect-ratio: 4 / 5; object-position: 50% 40%; }
+  .water-hint { left: 12%; right: 12%; bottom: 18%; justify-content: center; font-size: 13px; }
+  .wall-gull { left: 49.6%; top: 72.9%; width: 15%; }
+  .work-body { padding: 16px 20px 20px; }
+  .footer-inner { flex-direction: column; align-items: flex-start; }
+  .decor-boat { left: auto; right: 8%; bottom: 60px; width: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
