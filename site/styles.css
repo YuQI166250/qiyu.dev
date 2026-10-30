@@ -105,6 +105,29 @@ figure { margin: 0; }
   opacity: 0; pointer-events: none; will-change: transform;
 }
 .panorama .water.is-live { opacity: 1; }
+/* 隐藏彩蛋：画里晒太阳的猫。按钮完全透明，只在键盘聚焦时显示一圈柔和的虚线 */
+.cat-spot {
+  position: absolute; z-index: 2;
+  margin: 0; padding: 0; border: 0; border-radius: 45%;
+  background: transparent; cursor: pointer;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.cat-spot[hidden] { display: none; }
+.cat-spot:focus { outline: none; }
+.cat-spot:focus-visible { outline: 2px dashed rgb(255 253 247 / .9); outline-offset: 4px; }
+.cat-says {
+  position: absolute; z-index: 3; left: 0; top: 0; margin: 0;
+  /* 没有边框和卡片：只是一团向四周化开的淡淡水彩光晕，周围的风景依然透得出来 */
+  padding: 10px 26px 11px; white-space: nowrap;
+  background: radial-gradient(closest-side, rgb(251 247 236 / .7), rgb(251 247 236 / .38) 60%, rgb(251 247 236 / 0));
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "BiauKai", var(--serif);
+  font-size: clamp(14px, 1.2vw, 17px); line-height: 1.5; letter-spacing: .04em; color: var(--ink);
+  text-shadow: 0 0 2px rgb(251 247 236), 0 0 6px rgb(251 247 236 / .95), 0 0 12px rgb(251 247 236 / .7);
+  pointer-events: none;
+  opacity: 0; transform: translateY(6px) rotate(-2deg);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.cat-says.is-shown { opacity: 1; transform: translateY(0) rotate(-2deg); }
 /* 站在矮墙右段上的海鸥：left/top 是画中墙顶的落脚点（按图片比例换算到画框百分比），
    translate 让脚尖（图片宽 64%、底部）正好落在这一点上 */
 .wall-gull {
@@ -341,6 +364,11 @@ figure { margin: 0; }
   .work-body { padding: 16px 20px 20px; }
   .footer-inner { flex-direction: column; align-items: flex-start; }
   .decor-boat { left: auto; right: 8%; bottom: 60px; width: 44px; }
+}
+
+/* 减少动态效果：猫的话不上浮，直接出现、几秒后消失（下方全局规则已关闭过渡） */
+@media (prefers-reduced-motion: reduce) {
+  .cat-says, .cat-says.is-shown { transform: rotate(-2deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="hero-water.js" defer></script>
   <script src="postcard.js" defer></script>
+  <script src="cat.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到正文</a>
@@ -73,6 +74,9 @@
         </picture>
         <!-- 站在画中矮墙上的海鸥：放在海景图层里，随插画一起缩放、羽化 -->
         <img class="wall-gull" src="assets/decor/perched-gull.webp" width="235" height="189" alt="">
+        <!-- 隐藏彩蛋：画里晒太阳的猫。透明按钮的位置由 cat.js 按原画坐标计算，猫看不见时不出现 -->
+        <button class="cat-spot" type="button" aria-label="晒太阳的猫" hidden></button>
+        <p class="cat-says" role="status" aria-live="polite"></p>
         <figcaption class="water-hint" hidden>
           <span aria-hidden="true">〰</span> <span class="water-hint-text">海面是活的：移动鼠标拨动水波，点一下泛起涟漪</span>
         </figcaption>
