@@ -203,8 +203,16 @@
     const key = img.currentSrc.includes('mobile') ? 'mobile' : 'desktop';
     const src = img.currentSrc;
     sceneKey = src;
+    // 换图期间旧纹理与新插画对不上：先停下并淡出画布，新蒙版就绪后再显示
+    if (scene) { stop(); scene = null; canvas.classList.remove('is-live'); }
     const def = SCENES[key];
-    const maskImg = await loadImage(def.mask);
+    let maskImg;
+    try {
+      maskImg = await loadImage(def.mask);
+    } catch (err) {
+      if (sceneKey === src) fallBack(err); // 已被更新的换图取代时不处理
+      return;
+    }
     if (sceneKey !== src) return;
 
     scene = { ...def, maskImg };
@@ -387,13 +395,17 @@
       timer = setTimeout(() => { resize(); if (!running && scene) render(); }, 120);
     });
     // 跨过手机断点时 <picture> 会换图，重新准备场景
-    img.addEventListener('load', () => { if (img.currentSrc !== sceneKey) useCurrentImage(); });
+    img.addEventListener('load', () => { if (img.currentSrc !== sceneKey) useCurrentImage().catch(fallBack); });
 
-    useCurrentImage().catch((err) => {
-      console.warn(err);
-      stop();
-      canvas.classList.remove('is-live');
-    });
+    useCurrentImage().catch(fallBack);
+  }
+
+  // 素材加载失败：停止绘制并淡出画布，只显示下面的静态插画；之后再换图时会重新尝试
+  function fallBack(err) {
+    console.warn(err);
+    stop();
+    scene = null;
+    canvas.classList.remove('is-live');
   }
 
   // 减少动态效果：完全不启用，只显示静态插画
