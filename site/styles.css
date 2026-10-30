@@ -64,16 +64,13 @@ figure { margin: 0; }
 /* 首屏 */
 .intro { position: relative; padding-top: clamp(16px, 4vw, 48px); padding-bottom: clamp(40px, 5vw, 72px); }
 .intro-text { position: relative; z-index: 1; max-width: 620px; }
-.eyebrow {
-  display: inline-block; margin: 0 0 14px; padding: 2px 14px;
-  border-radius: 999px; background: var(--sun-soft);
-  color: #7a5b0c; font-size: 14px; letter-spacing: 1px;
-}
+/* 标题只有一行：字号略放大，字距拉开；文字块下移，与右侧手账的中线对齐 */
 .intro h1 {
   margin: 0; font-family: var(--serif); font-weight: 700;
-  font-size: clamp(40px, 6.2vw, 76px); line-height: 1.18; letter-spacing: 2px;
+  font-size: clamp(42px, 6.6vw, 88px); line-height: 1.15; letter-spacing: .12em;
 }
-.lead { margin: 18px 0 26px; font-size: clamp(16px, 1.6vw, 18px); color: var(--muted); }
+.lead { margin: 20px 0 26px; font-size: clamp(16px, 1.6vw, 19px); line-height: 1.8; color: var(--muted); letter-spacing: .04em; }
+.lead-break { display: none; }
 /* 无边界海景：去掉圆角、阴影和底色，四周用水彩边缘遮罩渐隐进纸面。
    遮罩作用在整个 figure 上——底图、WebGL 画布、飞过的海鸥、提示一起被羽化，始终对齐。
    左右略微伸出内容区，上沿向标题区轻轻上提（淡出部分不会盖住文字）。 */
@@ -308,10 +305,11 @@ figure { margin: 0; }
 
 /* 平板：文字区收窄，给手账角落让出位置；海鸥移到更靠右 */
 @media (min-width: 641px) {
-  .intro-text { max-width: min(620px, 56%); }
+  .intro-text { max-width: min(620px, 56%); margin-top: clamp(24px, 7.2vw, 104px); }
 }
 @media (max-width: 1100px) {
   .decor-gull { display: none; }
+  .lead-break { display: inline; } /* 平板起副标题分两行，避免碰到右侧明信片 */
 }
 
 /* 手机：单列、减少装饰 */
@@ -321,9 +319,11 @@ figure { margin: 0; }
 @media (max-width: 640px) {
   .site-header { padding: 14px 0; }
   .wordmark { font-size: 21px; }
-  .intro h1 { letter-spacing: 1px; }
-  /* 手机：只留一张明信片贴在标题第二行旁，柠檬枝压在它的一角 */
-  .journal { top: 78px; right: -4px; width: clamp(96px, 27vw, 120px); aspect-ratio: auto; height: 96px; }
+  .intro h1 { letter-spacing: .08em; }
+  /* 手机：副标题分两行，明信片贴在标题和副标题右侧，柠檬枝压在它的一角 */
+  .lead { max-width: 64%; }
+  .lead-break { display: inline; }
+  .journal { top: 62px; right: -4px; width: clamp(96px, 27vw, 120px); aspect-ratio: auto; height: 96px; }
   .journal-map, .journal-tape-b { display: none; }
   .journal-postcard { --tilt: 6deg; left: 0; top: 10px; width: 100%; }
   .journal-tape-a { left: -4%; top: 72%; width: 38%; }
