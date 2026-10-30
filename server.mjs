@@ -6,7 +6,7 @@ import path from 'node:path';
 // 用法：node server.mjs [目录]，默认仍为旧版 dist；新首页用 node server.mjs site
 const root = path.resolve(fileURLToPath(new URL(`./${process.argv[2] || 'dist'}/`, import.meta.url)));
 const port = Number(process.env.PORT || 4173);
-const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.png': 'image/png' };
+const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.png': 'image/png', '.webm': 'audio/webm', '.m4a': 'audio/mp4' };
 const server = http.createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);

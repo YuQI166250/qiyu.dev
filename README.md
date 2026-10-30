@@ -10,8 +10,9 @@
   - `index.html`、`styles.css`：首页。
   - `hero-water.js`：海景的 WebGL 动效（海面流动、指针水波与涟漪、枝叶轻摆、云朵漂移、帆船摇晃、偶尔飞过的海鸥）。
   - `postcard.js`：旅行手账里明信片的翻面互动。
+  - `ambience.js`：页头「听听海」开关与海边声景（海浪、海风、远处海鸥），默认静音。
   - `assets/`：插画与素材。
-- `scripts/`：素材处理脚本（生成响应式图片、动效蒙版、水彩边缘遮罩）。它们读取的原始美术素材不在本仓库中。
+- `scripts/`：素材处理脚本（生成响应式图片、动效蒙版、水彩边缘遮罩、环境音母带）。它们读取的原始美术素材不在本仓库中。
 - `server.mjs`：本地预览服务器。
 - `.github/workflows/pages.yml`：部署到 GitHub Pages。
 
@@ -30,3 +31,14 @@ node server.mjs site
 - 开启系统「减少动态效果」时不播放海景动画，明信片翻面改为淡入淡出。
 - 浏览器不支持 WebGL 时显示静态插画，其余功能正常。
 - 海景离开可视区域或页面切到后台时停止绘制。
+- 声音默认静音，点「听听海」后才下载（Opus 约 300KB；浏览器解不了 Opus 时改用 AAC 版本）。页面切到后台时淡出并暂停，回来后继续。
+
+## 声音素材
+
+三段环境音均来自 [Freesound](https://freesound.org)，采用 [CC0 1.0 公有领域贡献](https://creativecommons.org/publicdomain/zero/1.0/) 授权，可自由使用和修改，无须署名；这里仍记录来源以示感谢。网站中的版本经过剪辑、滤波、响度整理和压缩。
+
+| 用途 | 素材 | 作者 | 授权 |
+|---|---|---|---|
+| 海浪 | [Gentle Ocean Waves Loop](https://freesound.org/people/kkenny101/sounds/852826/) | kkenny101 | CC0 1.0 |
+| 海风 | [Sea Breeze Birds Wind.wav](https://freesound.org/people/jordir/sounds/360448/) | jordir | CC0 1.0 |
+| 海鸥 | [Seagulls distant.wav](https://freesound.org/people/Ambientsoundapp/sounds/537854/) | Ambientsoundapp | CC0 1.0 |
