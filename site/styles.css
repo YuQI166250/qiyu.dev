@@ -61,6 +61,26 @@ figure { margin: 0; }
 }
 .site-header nav a:hover { background: var(--sea-light); }
 
+/* 「听听海」声音开关：很轻的文字按钮。静音时两道波纹压得很平，打开后舒展开、慢慢漂动 */
+.sound-toggle {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px 0 12px;
+  border: 0; border-radius: 999px; background: transparent; color: var(--muted);
+  font: inherit; font-size: 14px; letter-spacing: .14em; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: background-color .3s, color .3s;
+}
+.sound-toggle[hidden] { display: none; }
+.sound-toggle:hover { background: rgb(214 236 247 / .55); color: var(--ink); }
+.sound-waves { width: 26px; height: 15px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.sound-waves path { transform-box: fill-box; transform-origin: center; transform: scaleY(.25); transition: transform .8s ease; }
+.sound-wave-b { opacity: .45; }
+.sound-toggle[aria-pressed="true"] { color: var(--sea); }
+.sound-toggle[aria-pressed="true"] .sound-waves path { transform: none; animation: sound-drift 3.4s ease-in-out infinite alternate; }
+.sound-toggle[aria-pressed="true"] .sound-wave-b { animation-delay: -1.7s; }
+.sound-toggle[data-state="loading"] .sound-label { animation: sound-loading 1.2s ease-in-out infinite alternate; }
+.sound-toggle[data-state="error"] { color: var(--muted); }
+@keyframes sound-drift { from { transform: translateX(-2px); } to { transform: translateX(2px); } }
+@keyframes sound-loading { from { opacity: 1; } to { opacity: .45; } }
+
 /* 首屏 */
 .intro { position: relative; padding-top: clamp(16px, 4vw, 48px); padding-bottom: clamp(40px, 5vw, 72px); }
 .intro-text { position: relative; z-index: 1; max-width: 620px; }
@@ -342,6 +362,7 @@ figure { margin: 0; }
 @media (max-width: 640px) {
   .site-header { padding: 14px 0; }
   .wordmark { font-size: 21px; }
+  .sound-toggle { margin-right: -10px; padding: 0 10px; font-size: 13px; letter-spacing: .1em; }
   .intro h1 { letter-spacing: .08em; }
   /* 手机：副标题分两行，明信片贴在标题和副标题右侧，柠檬枝压在它的一角 */
   .lead { max-width: 64%; }

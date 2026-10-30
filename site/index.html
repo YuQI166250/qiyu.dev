@@ -14,12 +14,21 @@
   <script src="hero-water.js" defer></script>
   <script src="postcard.js" defer></script>
   <script src="cat.js" defer></script>
+  <script src="ambience.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到正文</a>
 
   <header class="site-header shell">
     <a class="wordmark" href="./" aria-label="qiyu.dev · 返回首页">qiyu<span>.dev</span></a>
+    <!-- 海边声景开关：默认静音，点开才下载声音；不支持 Web Audio 时保持隐藏 -->
+    <button class="sound-toggle" type="button" aria-pressed="false" hidden>
+      <svg class="sound-waves" viewBox="0 0 28 16" aria-hidden="true">
+        <path class="sound-wave-a" d="M1 6c3-3 5 3 8 0s5 3 8 0 5 3 8 0"/>
+        <path class="sound-wave-b" d="M3 12c3-3 5 3 8 0s5 3 8 0 5 3 8 0"/>
+      </svg>
+      <span class="sound-label">听听海</span>
+    </button>
   </header>
 
   <main id="main">
