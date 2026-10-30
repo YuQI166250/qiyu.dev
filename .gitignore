@@ -1,0 +1,22 @@
+# 允许清单：默认忽略一切，只放行公开仓库需要的文件。
+# 设计稿、原始素材、旧探索稿、本地笔记和本地工具配置都留在本机，不进入仓库。
+/*
+!/.gitignore
+!/README.md
+!/server.mjs
+!/scripts/
+!/site/
+!/.github/
+
+# site/ 中暂不发布的内容（代码与素材保留在本地）
+/site/lab/
+/site/assets/scenes/
+/site/assets/covers/
+/site/assets/decor/watercolor-cloud.png
+
+# 系统与临时文件
+.DS_Store
+Thumbs.db
+*.log
+node_modules/
+__pycache__/
