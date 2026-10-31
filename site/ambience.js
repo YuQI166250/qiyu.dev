@@ -2,6 +2,9 @@
 // 三层声音：海浪一直在（同一段录音分成近、远两层，以不同速度循环，叠起来不会听出 22 秒的重复），
 // 海风在下面缓慢起伏，远处的海鸥隔一阵随机叫一声。
 // 开关、页面隐藏、来电打断时都用音量渐变，不会突然出声或断掉。
+// 声音跟着海边的时间变（读 seaside-time.js 的权重）：黄昏海鸥变少、海风柔一些；夜里只剩轻柔的浪，
+// 不再有海鸥，海风只留低沉的部分——海风录音里夹着零星的小鸟（2.5–8kHz），夜里用低通滤掉。
+// 换时间不会打开声音；正在播放时各层用一两秒慢慢滑过去，不会突然切断。
 (() => {
   'use strict';
 
@@ -24,7 +27,18 @@
   };
   const FADE_IN = 2.5, FADE_OUT = 1.2;
 
-  let ctx = null, master = null, buses = null, layers = null, echo = null, buffers = null, loading = null;
+  // 三个时间各自的声音：音量是乘在上面 mix 上的倍数，亮度是低通滤波的截止频率（Hz，越低越闷），
+  // gullRate 是海鸥出现的频繁程度（1 = 白天的间隔，0 = 不再叫）。过渡中按权重混合，频率按对数混合。
+  const TIME_MIX = {
+    day: { waves: 1, wavesTone: 20000, wind: 1, windTone: 20000, gulls: 1, gullRate: 1 },
+    dusk: { waves: 1, wavesTone: 9000, wind: 0.75, windTone: 2400, gulls: 0.6, gullRate: 0.4 },
+    night: { waves: 0.92, wavesTone: 5000, wind: 0.5, windTone: 1000, gulls: 0, gullRate: 0 },
+  };
+  const TIME_GLIDE = 0.9; // 换时间时各层滑过去的时间常数（秒），约 3 倍时间到位
+  const figure = document.querySelector('.panorama');
+  let timeMix = TIME_MIX.day;
+
+  let ctx = null, master = null, buses = null, tones = null, layers = null, echo = null, buffers = null, loading = null;
   let wanted = false, started = false;
   let timers = [], suspendTimer = 0, lastGull = -1, retryArmed = false;
 
@@ -63,9 +77,18 @@
     buses = {};
     for (const k of ['waves', 'wind', 'gulls']) {
       buses[k] = ctx.createGain();
-      buses[k].gain.value = mix[k];
-      buses[k].connect(master);
+      buses[k].gain.value = mix[k] * timeMix[k];
     }
+    // 随时间变化的低通：海浪一级；海风两级串联，坡度更陡，夜里能把鸟鸣压干净
+    const lowpass = (hz) => {
+      const f = ctx.createBiquadFilter();
+      f.type = 'lowpass'; f.frequency.value = hz; f.Q.value = -3; // Q 以 dB 计，约等于巴特沃斯
+      return f;
+    };
+    tones = { waves: [lowpass(timeMix.wavesTone)], wind: [lowpass(timeMix.windTone), lowpass(timeMix.windTone)] };
+    buses.waves.connect(tones.waves[0]).connect(master);
+    buses.wind.connect(tones.wind[0]).connect(tones.wind[1]).connect(master);
+    buses.gulls.connect(master);
     // 海鸥的空间余响：叫声停下后还有一点在海湾上空散开的尾音，不会戛然而止
     echo = ctx.createConvolver();
     echo.buffer = airImpulse(2.8);
@@ -147,8 +170,13 @@
     timers.push(setTimeout(gull, rand(5, 12) * 1000));
   }
 
-  function gull(once) {
+  function gull() {
     if (!ctx || ctx.state !== 'running' || !buffers) return;
+    // 夜里不叫；黄昏按比例偶尔叫一声。隔一阵再看看，时间换回白天后海鸥会回来
+    if (Math.random() >= timeMix.gullRate) {
+      timers.push(setTimeout(gull, rand(mix.gullGap[0], mix.gullGap[1]) * 1000));
+      return;
+    }
     let i;
     do { i = Math.floor(Math.random() * GULLS.length); } while (i === lastGull && GULLS.length > 1);
     lastGull = i;
@@ -177,7 +205,37 @@
     pan.connect(echo);
     src.start(t0, at, len);
     // 下一声从这一组结束后再算间隔
-    if (!once) timers.push(setTimeout(gull, (dur + rand(mix.gullGap[0], mix.gullGap[1])) * 1000));
+    timers.push(setTimeout(gull, (dur + rand(mix.gullGap[0], mix.gullGap[1])) * 1000));
+  }
+
+  // ---------- 跟着海边的时间 ----------
+  function blend(w) {
+    const out = {};
+    for (const k of Object.keys(TIME_MIX.day)) {
+      const v = ['day', 'dusk', 'night'].map((t) => TIME_MIX[t][k]);
+      out[k] = k.endsWith('Tone')
+        ? Math.exp(v.reduce((a, x, i) => a + Math.log(x) * w[i], 0))
+        : v.reduce((a, x, i) => a + x * w[i], 0);
+    }
+    return out;
+  }
+
+  function followTime() {
+    const w = window.seaTime && window.seaTime.weights;
+    if (!w) return;
+    timeMix = blend(w);
+    if (!ctx || !buses) return; // 还没打开声音：只记下来，打开时直接用
+    const t = ctx.currentTime;
+    for (const k of ['waves', 'wind', 'gulls']) buses[k].gain.setTargetAtTime(mix[k] * timeMix[k], t, TIME_GLIDE);
+    for (const k of ['waves', 'wind']) for (const f of tones[k]) f.frequency.setTargetAtTime(timeMix[k + 'Tone'], t, TIME_GLIDE);
+  }
+
+  // 过渡期间每帧都会收到 seatime，这里最多每 150 毫秒跟一次
+  let timeTimer = 0;
+  if (figure) {
+    figure.addEventListener('seatime', () => {
+      if (!timeTimer) timeTimer = setTimeout(() => { timeTimer = 0; followTime(); }, 150);
+    });
   }
 
   function stopTimers() { timers.forEach(clearTimeout); timers = []; }
@@ -250,6 +308,7 @@
         if (wanted && !document.hidden && buffers) armRetry();
       });
     }
+    followTime(); // 打开时直接按当前时间的配比，不从白天滑过去
     // 必须在点按事件里同步调用 resume，iOS 才会放行
     const resumed = ctx.resume();
     if (!buffers) {
@@ -294,17 +353,6 @@
   });
   window.addEventListener('pagehide', () => { if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); });
   window.addEventListener('pageshow', (e) => { if (e.persisted && wanted && ctx) play(); });
-
-  // 本地试听调比例用：seaAmbience.set('wind', 0.2)
-  window.seaAmbience = {
-    mix,
-    set(name, value) {
-      if (name === 'gullGap') { mix.gullGap = value; return; }
-      mix[name] = value;
-      if (buses && buses[name]) buses[name].gain.setTargetAtTime(value, ctx.currentTime, 0.15);
-    },
-    gull: () => gull(true),
-  };
 
   setUi('off');
   button.hidden = false;

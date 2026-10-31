@@ -11,16 +11,46 @@
         imagesrcset="assets/hero/hero-seaside-desktop-1200.webp 1200w, assets/hero/hero-seaside-desktop.webp 1774w"
         imagesizes="(min-width: 1240px) 1260px, calc(100vw - 16px)" media="(min-width: 641px)">
   <link rel="stylesheet" href="styles.css">
+  <!-- 同步执行：先按本地时间定好首屏是白天、黄昏还是夜晚，避免先闪一下白天 -->
+  <script src="seaside-clock.js"></script>
   <script src="hero-water.js" defer></script>
   <script src="postcard.js" defer></script>
   <script src="cat.js" defer></script>
   <script src="ambience.js" defer></script>
+  <script src="seaside-time.js" defer></script>
+  <script src="bottle.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到正文</a>
+  <!-- 手账随时间变化的色调（颜色矩阵由 seaside-time.js 设置） -->
+  <svg class="tone-defs" aria-hidden="true" focusable="false">
+    <filter id="time-tone" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0"/></filter>
+    <!-- 漂流瓶信纸的毛边：把纸张底色的边缘轻轻扰乱，像手撕过、被海水泡过的纸 -->
+    <filter id="paper-edge" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="11"/>
+      <feDisplacementMap in="SourceGraphic" scale="10" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
 
   <header class="site-header shell">
     <a class="wordmark" href="./" aria-label="qiyu.dev · 返回首页">qiyu<span>.dev</span></a>
+    <div class="header-tools">
+    <!-- 海边的时间：默认自动跟随本地时间，也可以手动选白天、黄昏、夜晚；海景和页面色调一起慢慢过渡。脚本不可用时保持隐藏，停在白天 -->
+    <div class="time-switch" role="group" aria-label="海边的时间" hidden>
+      <button type="button" data-time="day" aria-pressed="true" aria-label="白天">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.4"/><path d="M10 2.6v1.8M10 15.6v1.8M2.6 10h1.8M15.6 10h1.8M4.8 4.8l1.2 1.2M14 14l1.2 1.2M4.8 15.2 6 14M14 6l1.2-1.2"/></svg>
+      </button>
+      <button type="button" data-time="dusk" aria-pressed="false" aria-label="黄昏">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.6 13.6a4.4 4.4 0 0 1 8.8 0"/><path d="M2.4 13.6h15.2M5.4 16.6h9.2M10 4.4v1.8M4.4 7.4l1.2 1.1M15.6 7.4l-1.2 1.1"/></svg>
+      </button>
+      <button type="button" data-time="night" aria-pressed="false" aria-label="夜晚">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M14.8 12.6A6 6 0 0 1 7.4 5.2a6 6 0 1 0 7.4 7.4Z"/><path d="M14.6 3.4v2.2M13.5 4.5h2.2"/></svg>
+      </button>
+      <!-- 自动：跟着访客的本地时间换（时段表在 seaside-clock.js）；手动点了上面三个之一就停下，直到再点它 -->
+      <button type="button" data-mode="auto" aria-pressed="false" aria-label="自动（跟随本地时间）">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 8.4A6.4 6.4 0 1 0 15 13.8"/><path d="M16.6 5.2v3.4h-3.4M10 6.6V10l2.2 1.6"/></svg>
+      </button>
+    </div>
     <!-- 海边声景开关：默认静音，点开才下载声音；不支持 Web Audio 时保持隐藏 -->
     <button class="sound-toggle" type="button" aria-pressed="false" hidden>
       <svg class="sound-waves" viewBox="0 0 28 16" aria-hidden="true">
@@ -29,6 +59,7 @@
       </svg>
       <span class="sound-label">听听海</span>
     </button>
+    </div>
   </header>
 
   <main id="main">
@@ -83,9 +114,14 @@
         </picture>
         <!-- 站在画中矮墙上的海鸥：放在海景图层里，随插画一起缩放、羽化 -->
         <img class="wall-gull" src="assets/decor/perched-gull.webp" width="235" height="189" alt="">
-        <!-- 隐藏彩蛋：画里晒太阳的猫。透明按钮的位置由 cat.js 按原画坐标计算，猫看不见时不出现 -->
+        <!-- 隐藏彩蛋：画里矮墙上的猫（说的话跟着时间变）。透明按钮的位置由 cat.js 按原画坐标计算，猫看不见时不出现 -->
         <button class="cat-spot" type="button" aria-label="晒太阳的猫" hidden></button>
         <p class="cat-says" role="status" aria-live="polite"></p>
+        <!-- 漂流瓶彩蛋：偶尔从海面漂来，点开是一封海边来信。位置、出现时机由 bottle.js 控制，图片到时再下载 -->
+        <button class="bottle" type="button" aria-label="海面上漂来的漂流瓶" aria-haspopup="dialog" hidden>
+          <span class="bottle-ripple" aria-hidden="true"></span>
+          <span class="bottle-bob"><img class="bottle-img" width="240" height="101" alt=""></span>
+        </button>
         <figcaption class="water-hint" hidden>
           <span aria-hidden="true">〰</span> <span class="water-hint-text">海面是活的：移动鼠标拨动水波，点一下泛起涟漪</span>
         </figcaption>
@@ -128,5 +164,17 @@
       <a class="footer-top" href="#main">回到顶部 <span aria-hidden="true">↑</span></a>
     </div>
   </footer>
+
+  <!-- 漂流瓶里的信：HTML/CSS 画的米黄色水彩信纸，内容由 bottle.js 每次随机挑一句 -->
+  <dialog class="bottle-letter" aria-labelledby="letter-to" aria-describedby="letter-text">
+    <div class="letter-paper">
+      <button class="letter-close" type="button" aria-label="合上信纸">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></svg>
+      </button>
+      <p class="letter-to" id="letter-to">致捡到瓶子的人：</p>
+      <p class="letter-text" id="letter-text"></p>
+      <p class="letter-sign"></p>
+    </div>
+  </dialog>
 </body>
 </html>

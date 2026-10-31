@@ -1,4 +1,16 @@
+/* 会随海边时间（白天、黄昏、夜晚）慢慢变化的颜色：注册成 <color>，切换时由浏览器逐帧插值 */
+@property --paper { syntax: "<color>"; inherits: true; initial-value: #fbf7ec; }
+@property --ink { syntax: "<color>"; inherits: true; initial-value: #1d4b6b; }
+@property --muted { syntax: "<color>"; inherits: true; initial-value: #557587; }
+@property --wash-sun { syntax: "<color>"; inherits: true; initial-value: rgb(253 240 194 / .7); }
+@property --wash-sea { syntax: "<color>"; inherits: true; initial-value: rgb(196 226 243 / .62); }
+@property --wash-leaf { syntax: "<color>"; inherits: true; initial-value: rgb(220 237 200 / .6); }
+@property --wave-back { syntax: "<color>"; inherits: true; initial-value: #cfe7f3; }
+@property --wave-front { syntax: "<color>"; inherits: true; initial-value: #b9dcee; }
+@property --wash-night { syntax: "<color>"; inherits: true; initial-value: rgb(150 166 214 / 0); }
+
 :root {
+  --time-fade: 2.6s; /* 与 seaside-time.js 中的 FADE 一致 */
   --paper: #fbf7ec;
   --card: #fffdf7;
   --ink: #1d4b6b;
@@ -10,12 +22,36 @@
   --sun: #f3c63f;
   --sun-soft: #fdf0c2;
   --line: #e4e6dc;
+  --wash-sun: rgb(253 240 194 / .7);
+  --wash-sea: rgb(196 226 243 / .62);
+  --wash-leaf: rgb(220 237 200 / .6);
+  --wave-back: #cfe7f3;
+  --wave-front: #b9dcee;
+  --wash-night: rgb(150 166 214 / 0); /* 只在夜晚出现：海景上缘外的一团淡蓝 */
   --serif: "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "Songti SC", "STSong", "SimSun", serif;
   --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
   --radius-lg: 28px;
   --radius-md: 20px;
   color-scheme: light;
+  transition: --paper var(--time-fade) ease-in-out, --ink var(--time-fade) ease-in-out, --muted var(--time-fade) ease-in-out,
+    --wash-sun var(--time-fade) ease-in-out, --wash-sea var(--time-fade) ease-in-out, --wash-leaf var(--time-fade) ease-in-out,
+    --wave-back var(--time-fade) ease-in-out, --wave-front var(--time-fade) ease-in-out, --wash-night var(--time-fade) ease-in-out;
 }
+/* 黄昏：纸面带一点杏色，晕染换成杏黄、薰衣草紫和淡玫瑰；夜晚：纸面像被月光照着，微微偏冷，
+   手账后的阳光黄换成月白，海蓝晕染更深一点。都还是浅色纸面，不做深色模式。 */
+:root[data-time="dusk"] {
+  --paper: #fcf3e8; --ink: #27466a; --muted: #69708a;
+  --wash-sun: rgb(253 214 180 / .72); --wash-sea: rgb(216 208 238 / .62); --wash-leaf: rgb(248 216 206 / .55);
+  --wave-back: #dcd8ef; --wave-front: #c8cbea;
+}
+:root[data-time="night"] {
+  --paper: #eceef3; --ink: #1c3150; --muted: #56647e;
+  --wash-sun: rgb(250 245 222 / .8); --wash-sea: rgb(162 180 224 / .55); --wash-leaf: rgb(192 205 230 / .55);
+  --wave-back: #c3cce6; --wave-front: #a7b6dc;
+  --wash-night: rgb(150 166 214 / .48);
+}
+/* 首屏直接停在那个时间，不播放过渡 */
+:root.time-instant, :root.time-instant * { transition: none !important; }
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -60,6 +96,41 @@ figure { margin: 0; }
   transition: background-color .2s;
 }
 .site-header nav a:hover { background: var(--sea-light); }
+
+/* 页头右侧：时间切换 + 声音开关 */
+.header-tools { display: flex; align-items: center; gap: 6px; }
+
+/* 海边的时间：三枚很小的线描图标，平时是淡淡的灰蓝；当前时间上色，并垫一小团水彩色 */
+.time-switch { display: flex; align-items: center; gap: 2px; }
+.time-switch[hidden] { display: none; }
+.time-switch button {
+  display: grid; place-items: center; width: 40px; height: 40px; margin: 0; padding: 0;
+  border: 0; border-radius: 50%; background: transparent; color: var(--muted); opacity: .7;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background-color .4s, color .4s, opacity .4s;
+}
+.time-switch svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.time-switch button:hover { opacity: 1; background: rgb(214 236 247 / .45); }
+.time-switch [aria-pressed="true"] { opacity: 1; }
+.time-switch [data-time="day"][aria-pressed="true"] { color: #c98f12; background: rgb(253 240 194 / .75); }
+.time-switch [data-time="dusk"][aria-pressed="true"] { color: #d0703a; background: rgb(253 222 196 / .75); }
+.time-switch [data-time="night"][aria-pressed="true"] { color: #3d5596; background: rgb(214 220 242 / .8); }
+.time-switch [data-time="night"][aria-pressed="true"] svg { fill: rgb(61 85 150 / .14); }
+.time-switch [aria-busy="true"] svg { animation: sound-loading 1s ease-in-out infinite alternate; }
+/* 自动模式：「自动」按下，当前时间的图标仍然上色，只是不垫水彩色，看得出现在是自动选的 */
+.time-switch .is-current[aria-pressed="false"] { opacity: 1; }
+.time-switch [data-time="day"].is-current { color: #c98f12; }
+.time-switch [data-time="dusk"].is-current { color: #d0703a; }
+.time-switch [data-time="night"].is-current { color: #3d5596; }
+/* 「自动」：和三个时间隔一道很淡的竖线，图标更小一点 */
+.time-switch [data-mode="auto"] { position: relative; margin-left: 7px; }
+.time-switch [data-mode="auto"][hidden] { display: none; }
+.time-switch [data-mode="auto"]::before {
+  content: ""; position: absolute; left: -5px; top: 12px; bottom: 12px;
+  border-left: 1px solid currentColor; opacity: .3;
+}
+.time-switch [data-mode="auto"] svg { width: 18px; height: 18px; }
+.time-switch [data-mode="auto"][aria-pressed="true"] { color: var(--ink); background: rgb(214 236 247 / .6); }
 
 /* 「听听海」声音开关：很轻的文字按钮。静音时两道波纹压得很平，打开后舒展开、慢慢漂动 */
 .sound-toggle {
@@ -108,11 +179,15 @@ figure { margin: 0; }
   content: ""; position: absolute; z-index: -1; pointer-events: none;
   left: -20px; right: -20px; top: 4%; height: 64%;
   background:
-    radial-gradient(26% 30% at 80% 26%, rgb(253 240 194 / .7), transparent 70%),
-    radial-gradient(48% 34% at 58% 64%, rgb(196 226 243 / .62), transparent 72%),
-    radial-gradient(30% 30% at 16% 66%, rgb(220 237 200 / .6), transparent 70%);
+    radial-gradient(26% 30% at 80% 26%, var(--wash-sun), transparent 70%),
+    radial-gradient(48% 34% at 58% 64%, var(--wash-sea), transparent 72%),
+    radial-gradient(30% 30% at 16% 66%, var(--wash-leaf), transparent 70%),
+    radial-gradient(33% 14% at 62% 53%, var(--wash-night), transparent 100%);
 }
 .panorama picture img { width: 100%; aspect-ratio: 2.35 / 1; object-fit: cover; object-position: 50% 62%; }
+/* 首屏是黄昏或夜晚时：先只露出纸面，等那幅插画下载好再淡入（见 seaside-clock.js） */
+.panorama { transition: opacity .6s ease; }
+:root.time-boot .panorama { opacity: 0; }
 
 /* 海水互动：画布叠在插画上，竖向滑动仍交给页面滚动 */
 .panorama .water {
@@ -125,6 +200,24 @@ figure { margin: 0; }
   opacity: 0; pointer-events: none; will-change: transform;
 }
 .panorama .water.is-live { opacity: 1; }
+/* 黄昏、夜晚两层插画：与白天插画同样的裁切方式叠在上面，透明度由 seaside-time.js 逐帧设置 */
+.panorama .scene-layer { position: absolute; inset: 0; pointer-events: none; }
+.panorama .scene-layer img { width: 100%; height: 100%; opacity: 0; }
+/* 夜晚专属：天空上缘的深蓝像颜料快干时那样，越靠近纸边越淡，中间到右侧最明显。
+   只是叠在画面上的一层淡淡的蓝灰，不改裁切和水彩边缘，也不接收点击 */
+.panorama::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    radial-gradient(58% 27% at 62% 0%, rgb(184 194 228 / .58), rgb(184 194 228 / 0)),
+    linear-gradient(rgb(194 203 232 / .3), rgb(194 203 232 / 0) 17%);
+  opacity: 0; transition: opacity var(--time-fade) ease-in-out;
+}
+:root[data-time="night"] .panorama::after { opacity: 1; }
+
+/* 画里另外加上的小东西（墙上的海鸥、飞过的海鸥）跟着画面一起变暖、变暗，免得在夜景里发亮 */
+.wall-gull, .flying-gull { transition: filter var(--time-fade) ease-in-out; }
+:root[data-time="dusk"] .flying-gull { filter: sepia(.3) saturate(1.2) brightness(.97) hue-rotate(-8deg); }
+:root[data-time="night"] .flying-gull { filter: sepia(0) saturate(.55) brightness(.68) hue-rotate(0deg); }
 /* 隐藏彩蛋：画里晒太阳的猫。按钮完全透明，只在键盘聚焦时显示一圈柔和的虚线 */
 .cat-spot {
   position: absolute; z-index: 2;
@@ -153,9 +246,116 @@ figure { margin: 0; }
 .wall-gull {
   position: absolute; z-index: 1; left: 59.1%; top: 82.8%; width: 5%; height: auto;
   transform: translate(-64%, -98%);
-  filter: drop-shadow(1px 2px 1.5px rgb(110 85 50 / .28));
+  filter: brightness(1) saturate(1) sepia(0) drop-shadow(1px 2px 1.5px rgb(110 85 50 / .28));
   pointer-events: none; user-select: none;
 }
+:root[data-time="dusk"] .wall-gull { filter: brightness(.97) saturate(1.15) sepia(.3) drop-shadow(1px 2px 1.5px rgb(120 70 50 / .3)); }
+:root[data-time="night"] .wall-gull { filter: brightness(.66) saturate(.6) sepia(0) drop-shadow(1px 2px 1.5px rgb(20 30 60 / .3)); }
+
+/* 漂流瓶彩蛋：按钮就是瓶子本身，没有边框和底色；位置、宽度、漂来漂走都由 bottle.js 设置 */
+.bottle {
+  --ripple: rgb(255 255 255 / .5);
+  position: absolute; z-index: 2; left: 0; top: 0; width: 76px; aspect-ratio: 240 / 101;
+  margin: 0; padding: 0; border: 0; background: none; cursor: pointer;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.bottle[hidden] { display: none; }
+.bottle::after { content: ""; position: absolute; inset: -12px -8px; } /* 点击范围比瓶子大一圈，手指好点中 */
+.bottle[aria-disabled="true"] { cursor: default; pointer-events: none; }
+.bottle:focus { outline: none; }
+.bottle:focus-visible { outline: 2px dashed rgb(255 253 247 / .9); outline-offset: 7px; border-radius: 40%; }
+:root[data-time="dusk"] .bottle { --ripple: rgb(255 236 214 / .45); }
+:root[data-time="night"] .bottle { --ripple: rgb(206 218 246 / .26); }
+/* 随浪轻摇：上下浮一点、左右摆两三度 */
+.bottle-bob {
+  position: absolute; inset: 0; transform-origin: 50% 70%;
+  animation: bottle-bob 4.6s ease-in-out infinite; transition: filter .4s ease;
+}
+.bottle:hover .bottle-bob, .bottle:focus-visible .bottle-bob { filter: drop-shadow(0 0 5px rgb(255 252 236 / .8)); }
+.bottle-img {
+  width: 100%; height: 100%;
+  /* 瓶身下缘浸在水里：越往下越透出海面 */
+  -webkit-mask-image: linear-gradient(#000 56%, rgb(0 0 0 / .5) 94%);
+  mask-image: linear-gradient(#000 56%, rgb(0 0 0 / .5) 94%);
+  filter: sepia(0) saturate(1) brightness(1) hue-rotate(0deg);
+  transition: filter var(--time-fade) ease-in-out;
+}
+:root[data-time="dusk"] .bottle-img { filter: sepia(.22) saturate(1.12) brightness(.95) hue-rotate(-6deg); }
+:root[data-time="night"] .bottle-img { filter: sepia(0) saturate(.62) brightness(.7) hue-rotate(0deg); }
+/* 瓶子周围一圈淡淡的水纹，跟着浪慢慢舒张 */
+.bottle-ripple {
+  position: absolute; left: 2%; right: 0; top: 56%; height: 50%; border-radius: 50%;
+  background: radial-gradient(closest-side, transparent 52%, var(--ripple) 76%, transparent);
+  animation: bottle-ripple 4.6s ease-in-out infinite;
+}
+@keyframes bottle-bob {
+  0%, 100% { transform: translateY(0) rotate(-2.5deg); }
+  50% { transform: translateY(-2.5px) rotate(2deg); }
+}
+@keyframes bottle-ripple {
+  0%, 100% { transform: scale(.92, .86); opacity: .75; }
+  50% { transform: scale(1.04, 1); opacity: 1; }
+}
+
+/* 漂流瓶里的信：米黄色水彩信纸。纸张底色单独放在 ::before 上加毛边滤镜，文字保持清晰 */
+.bottle-letter {
+  width: min(440px, calc(100vw - 36px)); max-width: none; max-height: calc(100dvh - 36px);
+  margin: auto; padding: 0; border: 0; background: none; overflow: visible; color: var(--ink);
+}
+/* 遮罩是一层薄薄的纸色，把背后的海景轻轻推远，不压暗页面 */
+.bottle-letter::backdrop { background: rgb(250 245 230 / .5); }
+:root[data-time="dusk"] .bottle-letter::backdrop { background: rgb(252 238 226 / .5); }
+:root[data-time="night"] .bottle-letter::backdrop { background: rgb(222 227 240 / .45); }
+.letter-paper {
+  position: relative; isolation: isolate;
+  padding: clamp(42px, 8vw, 54px) clamp(28px, 7vw, 48px) clamp(30px, 6vw, 40px);
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "BiauKai", var(--serif);
+  clip-path: inset(-20px); transform: rotate(-.6deg);
+}
+.letter-paper::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 3px;
+  background:
+    linear-gradient(rgb(160 118 66 / .2), transparent 8%, transparent 91%, rgb(160 118 66 / .22)), /* 上下两头卷过的痕迹 */
+    radial-gradient(42% 30% at 16% 20%, rgb(236 198 136 / .38), transparent 70%),
+    radial-gradient(36% 30% at 86% 80%, rgb(226 186 126 / .34), transparent 70%),
+    radial-gradient(30% 24% at 78% 16%, rgb(184 214 224 / .3), transparent 70%),
+    radial-gradient(28% 22% at 24% 84%, rgb(206 226 196 / .26), transparent 70%),
+    radial-gradient(rgb(150 120 80 / .08) .8px, transparent 1.1px) 0 0 / 5px 5px,
+    #f7ecd3;
+  box-shadow: inset 0 0 32px rgb(190 148 88 / .3), 0 18px 40px rgb(29 60 90 / .2);
+  filter: url(#paper-edge);
+}
+:root[data-time="night"] .letter-paper::before { filter: url(#paper-edge) brightness(.94) saturate(.86); }
+.letter-to { margin: 0 0 12px; font-size: 17px; letter-spacing: .06em; color: var(--muted); }
+.letter-text {
+  margin: 0; font-size: clamp(19px, 4.8vw, 22px); line-height: 2.1; letter-spacing: .04em; text-indent: 2em; color: #22476a;
+  /* 很淡的横格线，和行高对齐 */
+  background: repeating-linear-gradient(transparent 0 calc(2.1em - 1px), rgb(31 111 168 / .14) calc(2.1em - 1px) 2.1em);
+}
+.letter-sign { margin: 20px 0 0; text-align: right; font-size: 16px; letter-spacing: .06em; color: var(--muted); }
+.letter-close {
+  position: absolute; right: 10px; top: 10px; display: grid; place-items: center;
+  width: 40px; height: 40px; margin: 0; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--muted); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background-color .3s, color .3s;
+}
+.letter-close:hover { background: rgb(214 236 247 / .55); color: var(--ink); }
+.letter-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+/* 展开：像卷着的信纸从中间向上下摊开，字随后慢慢显出来；合上时反过来卷回去 */
+.bottle-letter[open] .letter-paper { animation: letter-unroll .75s cubic-bezier(.2, .7, .25, 1) both; }
+.bottle-letter[open] .letter-paper > p { animation: letter-ink .6s .3s ease both; }
+.bottle-letter[open]::backdrop { animation: letter-fade .5s ease both; }
+.bottle-letter.is-closing .letter-paper { animation: letter-roll .32s ease-in both; }
+.bottle-letter.is-closing::backdrop { animation: letter-fade .32s ease reverse both; }
+@keyframes letter-unroll {
+  from { clip-path: inset(45% -20px 45% -20px); transform: translateY(10px) rotate(-1.6deg) scale(.97); opacity: .4; }
+  to { clip-path: inset(-20px); transform: rotate(-.6deg); opacity: 1; }
+}
+@keyframes letter-roll {
+  to { clip-path: inset(46% -20px 46% -20px); transform: translateY(8px) rotate(-1.6deg) scale(.97); opacity: 0; }
+}
+@keyframes letter-ink { from { opacity: 0; } }
+@keyframes letter-fade { from { opacity: 0; } }
 .water-hint {
   position: absolute; z-index: 2; right: 8%; bottom: 23%;
   display: inline-flex; align-items: center; gap: 6px;
@@ -180,6 +380,9 @@ figure { margin: 0; }
   pointer-events: none; user-select: none;
 }
 .journal img { position: absolute; height: auto; }
+/* 手账也跟着时间换一点色调：黄昏偏暖，夜里更暗、更淡、微微偏冷。
+   色调用 index.html 里的 #time-tone 颜色矩阵，由 seaside-time.js 随海景一起逐帧混合；白天不加滤镜 */
+.tone-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 .journal-map {
   right: 3%; top: 4%; width: 46%;
   transform: rotate(8deg);
@@ -327,8 +530,11 @@ figure { margin: 0; }
 .site-footer { position: relative; margin-top: 0; }
 .footer-sea { position: relative; height: 100px; margin-top: -36px; pointer-events: none; }
 .footer-wave { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+#wave-back stop:first-child { stop-color: var(--wave-back); }
+#wave-front stop:first-child { stop-color: var(--wave-front); }
 /* 帆船停在前层浪的浪峰（左 12% 一带，约在浪区顶部 24px 处），船底被前层浪没过一点 */
-.decor-boat { left: 11%; bottom: 58px; width: 56px; transform-origin: 50% 90%; animation: bob 6s ease-in-out infinite; }
+.decor-boat { left: 11%; bottom: 58px; width: 56px; transform-origin: 50% 90%; animation: bob 6s ease-in-out infinite; transition: filter var(--time-fade) ease-in-out; }
+:root[data-time="night"] .decor-boat { filter: brightness(.8) saturate(.7); }
 .footer-inner {
   display: flex; align-items: center; justify-content: space-between; gap: 8px 24px; flex-wrap: wrap;
   padding: 0 0 22px; font-size: 14px;
@@ -362,7 +568,13 @@ figure { margin: 0; }
 @media (max-width: 640px) {
   .site-header { padding: 14px 0; }
   .wordmark { font-size: 21px; }
+  .site-header { gap: 8px; }
   .sound-toggle { margin-right: -10px; padding: 0 10px; font-size: 13px; letter-spacing: .1em; }
+  .header-tools { gap: 0; }
+  .time-switch button { width: 33px; height: 40px; }
+  .time-switch [data-mode="auto"] { margin-left: 5px; }
+  .time-switch [data-mode="auto"]::before { left: -4px; }
+  .sound-toggle { gap: 6px; }
   .intro h1 { letter-spacing: .08em; }
   /* 手机：副标题分两行，明信片贴在标题和副标题右侧，柠檬枝压在它的一角 */
   .lead { max-width: 64%; }
@@ -373,7 +585,7 @@ figure { margin: 0; }
   .journal-tape-a { left: -4%; top: 72%; width: 38%; }
   .journal-lemon { right: -6px; top: -24px; width: 56px; transform: none; }
   /* 手机上只留很淡的海蓝晕染，避免在明信片后形成光斑 */
-  .intro::before { background: radial-gradient(60% 30% at 50% 62%, rgb(196 226 243 / .5), transparent 72%); }
+  .intro::before { background: radial-gradient(60% 30% at 50% 62%, var(--wash-sea), transparent 72%); }
   .panorama {
     margin-top: 4px;
     -webkit-mask-image: url(assets/hero/panorama-edge-mobile.png);
@@ -395,4 +607,10 @@ figure { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* 很窄的手机（约 375px 以下）：「听听海」只留文字，波纹图标让出位置，页头放得下四个时间按钮 */
+@media (max-width: 380px) {
+  .sound-waves { display: none; }
+  .wordmark { font-size: 19px; }
 }
