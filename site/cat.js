@@ -1,4 +1,4 @@
-// 隐藏彩蛋：点一下画里晒太阳的猫，它会在旁边轻轻说一句话。
+// 隐藏彩蛋：点一下画里矮墙上的猫，它会在旁边轻轻说一句话。说什么跟着海边的时间变：白天晒太阳，黄昏看晚霞，夜里打盹。
 // 不添加任何猫的图片：在原画猫的位置放一个透明按钮，位置按 object-fit: cover 的裁切实时换算；
 // 猫被裁掉、或落在水彩淡出的边缘里时，按钮自动移除，不留悬空的点击区。
 (() => {
@@ -16,11 +16,20 @@
     mobile: { box: [148 / 665, 580 / 887, 298 / 665, 634 / 887], edge: 'assets/hero/panorama-edge-mobile.png' },
   };
   const HEAD = 0.78; // 猫头大约在猫范围从左往右 78% 处，文字浮在头的上方
+  // 头两下总是这两句；之后在「这个时间专属的」和「什么时候都能说的」之间交替着轮
   const FIRST = ['呼噜……', '这里的位置已经被我占了。'];
-  const MORE = ['太阳晒得刚刚好。', '嘘，我在听海。', '喵。', '尾巴不给摸。', '再睡五分钟就起来。', '海风是我叫来的。'];
+  const ANY = ['嘘，我在听海。', '喵。', '尾巴不给摸。', '再睡五分钟就起来。', '海风是我叫来的。'];
+  const LINES = {
+    day: ['太阳晒得刚刚好。', '石头被晒得暖暖的。', '海鸥又在偷看我的午饭。'],
+    dusk: ['晚霞是橘子味的。', '天快黑了，我还不想回家。', '等灯塔亮了再走。'],
+    night: ['月亮出来巡逻了。', '嘘，星星在数浪。', '墙上还留着一点白天的温度。'],
+  };
+  const LABELS = { day: '晒太阳的猫', dusk: '看晚霞的猫', night: '打盹的猫' };
+  const timeNow = () => (LINES[document.documentElement.dataset.time] ? document.documentElement.dataset.time : 'day');
+  const pool = (time) => LINES[time].flatMap((line, i) => [line, ANY[i]]).concat(ANY.slice(LINES[time].length));
   const SHOW_MS = 3200;
 
-  let clicks = 0, hideTimer = 0, edges = {}, cat = null;
+  let clicks = 0, hideTimer = 0, edges = {}, cat = null, said = '';
 
   // 读取水彩边缘遮罩，用来判断猫所在处是否清晰可见
   function loadEdge(src) {
@@ -89,8 +98,11 @@
 
   spot.addEventListener('click', () => {
     if (!cat) return;
-    const line = clicks < FIRST.length ? FIRST[clicks] : MORE[(clicks - FIRST.length) % MORE.length];
+    const lines = pool(timeNow());
+    let line = clicks < FIRST.length ? FIRST[clicks] : lines[(clicks - FIRST.length) % lines.length];
+    if (line === said) line = lines[(clicks - FIRST.length + 1) % lines.length]; // 刚换了时间时别连着说同一句
     clicks++;
+    said = line;
     says.textContent = line;
     position();
     // 先撤掉再加回，让同一句话或连续点击也能重新浮现
@@ -107,4 +119,9 @@
   img.addEventListener('load', schedule); // 跨过手机断点时 <picture> 会换图
   if ('ResizeObserver' in window) new ResizeObserver(schedule).observe(figure);
   schedule();
+
+  // 换时间时，按钮的名字跟着换；正在说的话不改
+  const label = () => spot.setAttribute('aria-label', LABELS[timeNow()]);
+  new MutationObserver(label).observe(document.documentElement, { attributes: true, attributeFilter: ['data-time'] });
+  label();
 })();

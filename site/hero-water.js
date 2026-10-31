@@ -2,6 +2,7 @@
 // 原有 <img> 始终保留在下面作为静态画面；WebGL 画布只在可用、未要求减少动态效果时叠在上面。
 // 海面两层运动：着色器噪声（持续流动）+ CPU 波动方程（指针拨动、点击涟漪）。
 // 水面蒙版由 scripts/make-sea-masks.py 生成，只让海水流动。
+// 黄昏、夜晚两幅插画与白天同一构图，共用蒙版；三幅画按 seaside-time.js 给出的权重在着色器里混合。
 (() => {
   'use strict';
 
@@ -11,16 +12,25 @@
   if (!figure || !img) return;
 
   // boat：画面里帆船所在的小方框（x0, y0, x1, y1）和摇晃支点（船底）
+  // moon：夜景里月亮的中心和半径（含光晕，按图片比例）；云会漂，月亮不跟着漂。手机图裁掉了月亮。
   const SCENES = {
     desktop: {
       mask: 'assets/hero/hero-seaside-desktop-mask.png', horizon: 0.436, grid: [200, 100],
       boat: [0.645, 0.495, 0.69, 0.645], pivot: [0.666, 0.635],
+      moon: [1238 / 1774, 129 / 887, 64 / 1774, 64 / 887],
     },
     mobile: {
       mask: 'assets/hero/hero-seaside-mobile-crop-mask.png', horizon: 0.437, grid: [96, 128],
       boat: [0.698, 0.452, 0.755, 0.526], pivot: [0.726, 0.52],
+      moon: [-1, -1, 0.01, 0.01],
     },
   };
+  // 海面上的光：lit 是水波迎光面的提亮，glint 是零星的闪光。白天偏白，黄昏偏暖，夜里是很淡的月白
+  const LIGHT = {
+    lit: [[0.80, 0.96, 1.0, 0.30], [1.0, 0.88, 0.76, 0.26], [0.70, 0.78, 1.0, 0.13]],
+    glint: [[1.0, 0.98, 0.88, 0.18], [1.0, 0.85, 0.60, 0.17], [0.86, 0.90, 1.0, 0.09]],
+  };
+  const LAYERS = ['dusk', 'night'];
   const STEP = 1 / 60;
   const DAMPING = 0.985;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -31,6 +41,7 @@
   let W = 0, H = 0, cur, prev, waterMask, waveBytes;
   let running = false, visible = false, raf = 0, last = 0, acc = 0, time = 0, frameCount = 0;
   let lastPointer = null;
+  let layerSrc = { dusk: '', night: '' }; // 已经传进纹理的黄昏、夜晚图片地址
   let view = { scale: [1, 1], offset: [0, 0] };
 
   const VERT = `
@@ -44,7 +55,10 @@
   const FRAG = `
     precision mediump float;
     varying vec2 vUv;
-    uniform sampler2D uImage, uMask, uWave;
+    uniform sampler2D uImage, uDusk, uNight, uMask, uWave;
+    uniform vec3 uWeights;   // 白天、黄昏、夜晚三幅画的比例
+    uniform vec3 uLit, uGlint;
+    uniform vec4 uMoon;
     uniform vec2 uScale, uOffset;
     uniform vec2 uPx;        // 一个 CSS 像素对应的纹理坐标长度，让动效幅度在桌面和手机上一致
     uniform vec4 uBoat;
@@ -85,7 +99,9 @@
       // 天空：云朵极慢地来回漂移，并带一点舒展变形
       vec2 drift = vec2(9.0 * sin(t * 0.09) + 1.5 * sin(t * 0.13 + uv.y * 5.0), 0.8 * sin(t * 0.1 + uv.x * 4.0));
       drift += (vec2(noise(uv * 6.0 + t * 0.04), noise(uv * 6.0 - t * 0.04 + 3.1)) - 0.5) * 3.0;
-      offset += drift * uPx * layers.b;
+      // 夜里云漂得更慢一些，月亮本身留在原处
+      float moon = 1.0 - smoothstep(0.7, 1.0, length((uv - uMoon.xy) / uMoon.zw));
+      offset += drift * uPx * layers.b * (1.0 - uWeights.z * max(0.4, moon));
 
       // 帆船：绕船底轻轻摇晃、起伏（在像素空间旋转，避免被拉伸）
       vec2 out2 = max(uBoat.xy - uv, uv - uBoat.zw);
@@ -97,15 +113,19 @@
         offset += (r - q + vec2(0.0, 0.7 * sin(t * 1.2 + 1.2))) * uPx * inBoat;
       }
 
-      vec3 color = texture2D(uImage, uv + offset).rgb;
+      vec2 st = uv + offset;
+      vec3 color = vec3(0.0);
+      if (uWeights.x > 0.0) color += texture2D(uImage, st).rgb * uWeights.x;
+      if (uWeights.y > 0.0) color += texture2D(uDusk, st).rgb * uWeights.y;
+      if (uWeights.z > 0.0) color += texture2D(uNight, st).rgb * uWeights.z;
 
       float lit = clamp(-g.x * 0.7 - g.y * 1.1, -1.0, 1.0) * m;
-      color += vec3(0.80, 0.96, 1.0) * max(lit, 0.0) * 0.3;
+      color += uLit * max(lit, 0.0);
       color *= 1.0 + min(lit, 0.0) * 0.2;
 
       float s = noise(p * vec2(4.0, 6.0) + vec2(t * 0.25, -t * 0.6) + n2 * 3.0);
       s = smoothstep(0.80, 0.97, s) * m * (0.35 + 0.65 * (1.0 - d));
-      color += vec3(1.0, 0.98, 0.88) * s * 0.18;
+      color += uGlint * s;
       color *= 1.0 + 0.03 * swell * m;
 
       gl_FragColor = vec4(color, 1.0);
@@ -161,13 +181,23 @@
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
     uniforms = {};
-    for (const name of ['uImage', 'uMask', 'uWave', 'uScale', 'uOffset', 'uPx', 'uBoat', 'uPivot', 'uTime', 'uHorizon']) {
+    for (const name of ['uImage', 'uDusk', 'uNight', 'uMask', 'uWave', 'uWeights', 'uLit', 'uGlint', 'uMoon',
+      'uScale', 'uOffset', 'uPx', 'uBoat', 'uPivot', 'uTime', 'uHorizon']) {
       uniforms[name] = gl.getUniformLocation(program, name);
     }
     gl.uniform1i(uniforms.uImage, 0);
     gl.uniform1i(uniforms.uMask, 1);
     gl.uniform1i(uniforms.uWave, 2);
-    textures = { image: makeTexture(), mask: makeTexture(), wave: makeTexture() };
+    gl.uniform1i(uniforms.uDusk, 3);
+    gl.uniform1i(uniforms.uNight, 4);
+    textures = { image: makeTexture(), mask: makeTexture(), wave: makeTexture(), dusk: makeTexture(), night: makeTexture() };
+    // 黄昏、夜晚还没下载时先放一个像素占位，权重为 0，不会被采样
+    for (const [unit, tex] of [[3, textures.dusk], [4, textures.night]]) {
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+    }
+    setWeights([1, 0, 0]);
 
     canvas.addEventListener('webglcontextlost', (e) => {
       e.preventDefault();
@@ -218,6 +248,7 @@
     scene = { ...def, maskImg };
     upload(0, textures.image, img);
     upload(1, textures.mask, maskImg);
+    layerSrc = { dusk: '', night: '' }; // 换了桌面/手机版，另外两幅画也要重新取
 
     [W, H] = def.grid;
     const c = document.createElement('canvas');
@@ -235,11 +266,53 @@
     gl.uniform1f(uniforms.uHorizon, def.horizon);
     gl.uniform4fv(uniforms.uBoat, def.boat);
     gl.uniform2fv(uniforms.uPivot, def.pivot);
+    gl.uniform4fv(uniforms.uMoon, def.moon);
     resize();
+    goLive();
+  }
+
+  // 当前时间要用到的插画都已传进纹理后才显示画布；否则先让下面的静态叠层顶着，等图片到了再显示
+  function goLive() {
+    if (!scene || !syncTime()) return;
     render();
     canvas.classList.add('is-live');
     if (hint) hint.hidden = false;
     update();
+  }
+
+  function setWeights(w) {
+    gl.uniform3fv(uniforms.uWeights, w);
+    for (const key of ['lit', 'glint']) {
+      const sum = [0, 0, 0];
+      LIGHT[key].forEach((c, i) => { for (let k = 0; k < 3; k++) sum[k] += c[k] * c[3] * w[i]; });
+      gl.uniform3fv(uniforms[key === 'lit' ? 'uLit' : 'uGlint'], sum);
+    }
+  }
+
+  // 读取 seaside-time.js 的权重，把新下载好的黄昏、夜晚插画传进纹理；返回需要的图是否都已就绪
+  function syncTime() {
+    const t = window.seaTime;
+    if (!t) return true;
+    const mobile = img.currentSrc.includes('mobile');
+    let ready = true;
+    LAYERS.forEach((key, k) => {
+      const el = t.layers[key];
+      const usable = el.complete && el.naturalWidth > 0 && el.currentSrc.includes('mobile') === mobile;
+      if (usable && layerSrc[key] !== el.currentSrc) {
+        upload(3 + k, textures[key], el);
+        layerSrc[key] = el.currentSrc;
+      }
+      if (t.weights[k + 1] > 0 && !(usable && layerSrc[key] === el.currentSrc)) ready = false;
+    });
+    if (ready) setWeights(t.weights);
+    return ready;
+  }
+
+  function onSeaTime() {
+    if (!scene || gl.isContextLost()) return;
+    if (!canvas.classList.contains('is-live')) { goLive(); return; }
+    if (!syncTime()) { canvas.classList.remove('is-live'); return; } // 极少见：图片还在换，先退回静态叠层
+    if (!running) render();
   }
 
   // 与 <img> 的 object-fit: cover 和 object-position 完全对齐
@@ -386,6 +459,7 @@
     }, { rootMargin: '80px' }).observe(figure);
 
     document.addEventListener('visibilitychange', update);
+    figure.addEventListener('seatime', onSeaTime);
     window.addEventListener('pagehide', stop);
     window.addEventListener('pageshow', update);
 
