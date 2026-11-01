@@ -1,6 +1,6 @@
 // 漂流瓶彩蛋（V2 第二阶段）：在页面上停留一两分钟后，偶尔有一只瓶子从海景右侧的海面慢慢漂进来，
 // 停在帆船和礁石之间的开阔水面上随浪轻摇。点一下（或用键盘按下）就展开一张米黄色信纸，读一句海边来信；
-// 合上信纸后瓶子慢慢漂走，隔几分钟才可能再来。没有提示、没有计数，不来也没关系。
+// 合上信纸后瓶子在原处慢慢淡去，隔几分钟才可能再来。没有提示、没有计数，不来也没关系。
 // 计时只在页面处于前台、海景在可视范围内时走；阅读信纸时停住，瓶子也不会离开。
 (() => {
   'use strict';
@@ -18,13 +18,13 @@
   const SRC = 'assets/decor/message-bottle.webp';
   const RATIO = 101 / 240; // 素材高宽比
 
-  // 瓶子在两张原画里的路线（原图像素）：from 从画面右缘外的海面进来，停在 rest，合上信后漂向 away。
+  // 瓶子在两张原画里的路线（原图像素）：from 从画面右缘外的海面进来，停在 rest，一直没人理时漂向 away。
   // rest 选在帆船右侧、礁石左侧的开阔水面上；width 是瓶子在原图里的宽度，近处海面上略大于远处的帆船。
   const ROUTES = {
     desktop: { size: [1774, 887], from: [1835, 590], rest: [1400, 612], away: [1765, 568], width: 108 },
     mobile: { size: [665, 887], from: [725, 494], rest: [566, 506], away: [705, 476], width: 100 },
   };
-  const ARRIVE_MS = 18000, LEAVE_MS = 15000;
+  const ARRIVE_MS = 18000, LEAVE_MS = 15000, FADE_MS = 1800;
   const MIN = 60000;
 
   const LETTERS = [
@@ -130,20 +130,23 @@
     wait(rand(70, 100) * 1000, () => leave(rand(2.5, 4.5) * MIN));
   }
 
-  function leave(after) {
+  // fade：读完信合上后，瓶子停在原处淡去；没人理时才漂向远处
+  function leave(after, fade = false) {
     state = 'leaving';
     bottle.setAttribute('aria-disabled', 'true');
-    const done = () => { hide(); wait(after, arrive); }; // hide() 会取消停在终点的漂走动画
+    const done = () => { hide(); wait(after, arrive); }; // hide() 会取消停在终点的动画
     if (reduceMotion.matches || !spot) { done(); return; }
-    // 还在漂来的半路上：从当前位置接着漂走，不跳回停靠点
+    // 还在漂来的半路上：定在当前位置，不跳回停靠点
     let start = { transform: shift([0, 0]), opacity: 1 };
     if (anim) {
       anim.commitStyles();
       anim.cancel();
       start = { transform: bottle.style.transform, opacity: bottle.style.opacity || 1 };
     }
-    anim = bottle.animate([start, { opacity: 1, offset: 0.35 }, { transform: shift(spot.away, 0.84), opacity: 0 }],
-      { duration: LEAVE_MS, easing: 'cubic-bezier(.45, 0, .7, 1)', fill: 'forwards' });
+    anim = fade
+      ? bottle.animate([{ opacity: start.opacity }, { opacity: 0 }], { duration: FADE_MS, easing: 'ease-in-out', fill: 'forwards' })
+      : bottle.animate([start, { opacity: 1, offset: 0.35 }, { transform: shift(spot.away, 0.84), opacity: 0 }],
+        { duration: LEAVE_MS, easing: 'cubic-bezier(.45, 0, .7, 1)', fill: 'forwards' });
     anim.onfinish = done;
   }
 
@@ -182,7 +185,7 @@
   letter.addEventListener('close', () => {
     clearTimeout(closing); closing = 0;
     letter.classList.remove('is-closing');
-    if (state.startsWith('reading')) leave(rand(5, 8) * MIN);
+    if (state.startsWith('reading')) leave(rand(5, 8) * MIN, true);
   });
 
   // ---------- 前台 / 后台、可见 / 不可见 ----------
