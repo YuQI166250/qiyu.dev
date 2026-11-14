@@ -350,7 +350,7 @@ ${p.html}
 ${GISCUS.repoId && GISCUS.categoryId ? `<section class="page-card comments" id="comments" aria-labelledby="comments-title"
   data-repo="${GISCUS.repo}" data-repo-id="${GISCUS.repoId}" data-category="${GISCUS.category}" data-category-id="${GISCUS.categoryId}">
   <h2 class="comments-title" id="comments-title">评论</h2>
-  <p class="comments-note">用 GitHub 账号登录后就能留言，评论保存在本站仓库的 GitHub Discussions 里。</p>
+  <p class="comments-note">用 GitHub 账号登录后就能留言。</p>
   <div class="giscus"></div>
 </section>` : ''}`;
   await write(`posts/${p.slug}/index.html`, page({ title: `${p.title} · ${SITE_NAME}`, description: p.summary, nav: '', main, side: tocCard(p.toc) || side, bodyClass: 'is-post' }));
