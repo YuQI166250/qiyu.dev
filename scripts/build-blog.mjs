@@ -204,11 +204,23 @@ const card = (p) => `<article class="post-card">
   </div>
 </article>`;
 
+// 热门标签：最多 12 个，按文章数分成 1～4 级字号，用得越多字越大
+const hotTags = (tags) => {
+  const top = tags.slice(0, 12), counts = top.map(([, ps]) => ps.length);
+  const min = Math.min(...counts), max = Math.max(...counts);
+  const level = (n) => (max === min ? 1 : 1 + Math.round(((n - min) / (max - min)) * 3));
+  return top.map(([tag, ps]) => `<a href="/tags/#${anchor('t', tag)}" data-weight="${level(ps.length)}" title="${ps.length} 篇">${esc(tag)}</a>`).join('');
+};
+
 const sideCards = (posts) => {
   const cats = countBy(posts, 'category'), tags = countBy(posts, 'tags');
   return `<div class="side-card side-cats">
   <h2 class="side-title"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.8 5.6c0-.9.7-1.6 1.6-1.6h3.4l1.6 2h6.2c.9 0 1.6.7 1.6 1.6v7c0 .9-.7 1.6-1.6 1.6H4.4c-.9 0-1.6-.7-1.6-1.6Z"/></svg>分类</h2>
   <ul class="side-list">${cats.map(([c, ps]) => `<li><a href="/categories/#${anchor('c', c)}">${esc(c)}</a><span>${ps.length}</span></li>`).join('')}</ul>
+</div>
+<div class="side-card side-tags">
+  <h2 class="side-title"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.2 3.2h6.2l7.4 7.4-6.2 6.2-7.4-7.4Z"/><circle cx="6.8" cy="6.8" r="1.2"/></svg>热门标签</h2>
+  <p class="tag-cloud">${hotTags(tags)}</p>
 </div>
 <div class="side-card side-latest">
   <h2 class="side-title"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.6 1.6"/></svg>最近更新</h2>

@@ -1130,3 +1130,12 @@ figure { margin: 0; }
 @media (max-width: 640px) {
   .site-nav a::after { left: 8px; right: 8px; bottom: 7px; }
 }
+
+/* 侧栏「热门标签」：字号按文章数分四级；窄屏和分类一样收起（标签页在导航里） */
+.side-tags .tag-cloud { gap: 4px 14px; align-items: baseline; }
+.side-tags .tag-cloud a { color: var(--muted); font-size: 14px; line-height: 1.5; transition: color .2s; }
+.side-tags .tag-cloud a[data-weight="2"] { font-size: 17px; color: var(--ink); }
+.side-tags .tag-cloud a[data-weight="3"] { font-size: 21px; color: var(--ink); }
+.side-tags .tag-cloud a[data-weight="4"] { font-size: 26px; color: var(--ink); }
+.side-tags .tag-cloud a:hover { color: var(--sea); }
+@media (max-width: 960px) { .side-tags { display: none; } }
