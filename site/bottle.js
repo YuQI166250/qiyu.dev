@@ -22,7 +22,7 @@
   // rest 选在帆船右侧、礁石左侧的开阔水面上；width 是瓶子在原图里的宽度，近处海面上略大于远处的帆船。
   const ROUTES = {
     desktop: { size: [1774, 887], from: [1835, 590], rest: [1400, 612], away: [1765, 568], width: 108 },
-    mobile: { size: [665, 887], from: [725, 494], rest: [566, 506], away: [705, 476], width: 100 },
+    mobile: { size: [665, 887], from: [725, 494], rest: [450, 470], away: [705, 476], width: 100 },
   };
   const ARRIVE_MS = 18000, LEAVE_MS = 15000, FADE_MS = 1800;
   const MIN = 60000;

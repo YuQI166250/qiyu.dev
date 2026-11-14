@@ -1,52 +1,53 @@
-// 博客的两个小互动：标题区的站内搜索，以及文章页侧栏目录跟着阅读位置高亮。
+// 博客的小互动：站内搜索、文章目录高亮、复制、图片放大、滚动后的顶栏、评论区。
 // 搜索索引 search.json 由 scripts/build-blog.mjs 生成，第一次聚焦搜索框时才下载。
 (() => {
   'use strict';
 
-  // ---------- 站内搜索 ----------
-  const form = document.querySelector('.site-search');
-  const input = form && form.querySelector('input');
-  const panel = form && form.querySelector('.search-results');
-  if (form && input && panel) {
-    let index = null, loading = null, active = -1;
+  // ---------- 站内搜索（标题区和顶栏各有一个搜索框，共用同一份索引） ----------
+  let index = null, loading = null;
+  const load = () => loading || (loading = fetch('/search.json')
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
+    .then((data) => { index = data; return data; })
+    .catch(() => { loading = null; return null; }));
 
-    const load = () => loading || (loading = fetch('/search.json')
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
-      .then((data) => { index = data; return data; })
-      .catch(() => { loading = null; return null; }));
+  const escape = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const mark = (text, words) => {
+    let html = escape(text);
+    for (const w of words) html = html.replace(new RegExp(escape(w).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), (m) => `<mark>${m}</mark>`);
+    return html;
+  };
+  // 摘一小段包含关键词的正文；没有命中正文时用摘要
+  const snippet = (post, words) => {
+    const lower = post.text.toLowerCase();
+    const at = Math.min(...words.map((w) => lower.indexOf(w)).filter((i) => i >= 0));
+    if (!Number.isFinite(at)) return post.summary;
+    const from = Math.max(0, at - 24);
+    return (from ? '…' : '') + post.text.slice(from, from + 90) + '…';
+  };
 
-    const escape = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-    const mark = (text, words) => {
-      let html = escape(text);
-      for (const w of words) html = html.replace(new RegExp(escape(w).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), (m) => `<mark>${m}</mark>`);
-      return html;
-    };
-    // 摘一小段包含关键词的正文；没有命中正文时用摘要
-    const snippet = (post, words) => {
-      const lower = post.text.toLowerCase();
-      const at = Math.min(...words.map((w) => lower.indexOf(w)).filter((i) => i >= 0));
-      if (!Number.isFinite(at)) return post.summary;
-      const from = Math.max(0, at - 24);
-      return (from ? '…' : '') + post.text.slice(from, from + 90) + '…';
-    };
+  function search(query) {
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return [];
+    return index.map((post) => {
+      const title = post.title.toLowerCase(), meta = [post.category, ...post.tags].join(' ').toLowerCase();
+      const body = (post.summary + ' ' + post.text).toLowerCase();
+      let score = 0;
+      for (const w of words) {
+        if (title.includes(w)) score += 10;
+        else if (meta.includes(w)) score += 5;
+        else if (body.includes(w)) score += 1;
+        else return null; // 每个词都要出现
+      }
+      return { post, score };
+    }).filter(Boolean).sort((a, b) => b.score - a.score || b.post.date.localeCompare(a.post.date)).slice(0, 8)
+      .map(({ post }) => ({ post, words }));
+  }
 
-    function search(query) {
-      const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-      if (!words.length) return [];
-      return index.map((post) => {
-        const title = post.title.toLowerCase(), meta = [post.category, ...post.tags].join(' ').toLowerCase();
-        const body = (post.summary + ' ' + post.text).toLowerCase();
-        let score = 0;
-        for (const w of words) {
-          if (title.includes(w)) score += 10;
-          else if (meta.includes(w)) score += 5;
-          else if (body.includes(w)) score += 1;
-          else return null; // 每个词都要出现
-        }
-        return { post, score };
-      }).filter(Boolean).sort((a, b) => b.score - a.score || b.post.date.localeCompare(a.post.date)).slice(0, 8)
-        .map(({ post }) => ({ post, words }));
-    }
+  function bindSearch(form) {
+    const input = form.querySelector('input');
+    const panel = form.querySelector('.search-results');
+    if (!input || !panel) return;
+    let active = -1;
 
     function render() {
       const query = input.value.trim();
@@ -85,6 +86,7 @@
     document.addEventListener('pointerdown', (e) => { if (!form.contains(e.target)) panel.hidden = true; });
     form.addEventListener('focusout', (e) => { if (!form.contains(e.relatedTarget)) panel.hidden = true; });
   }
+  document.querySelectorAll('.site-search').forEach(bindSearch);
 
   // ---------- 文章目录：高亮正在读的那一节 ----------
   const links = [...document.querySelectorAll('.toc a')];
@@ -191,16 +193,27 @@
   // ---------- 滚过首屏后出现的顶栏：网站名、当前标题、回到顶部；文章页显示阅读进度 ----------
   const hero = document.querySelector('.intro.hero');
   if (hero) {
-    const heading = document.querySelector('.post-title, .page-title');
     const bar = document.createElement('div');
     bar.className = 'float-bar';
     bar.innerHTML = `<div class="float-bar-inner shell">
       <a class="float-bar-home" href="/">QIYU<span>的海边小世界</span></a>
-      <span class="float-bar-title"></span>
+      <nav class="float-bar-nav" aria-label="顶栏导航"></nav>
       <button class="float-bar-top" type="button" aria-label="回到顶部"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg></button>
     </div>
     <div class="float-bar-progress" aria-hidden="true"></div>`;
-    bar.querySelector('.float-bar-title').textContent = heading ? heading.textContent : '';
+    // 导航和搜索框照搬标题区的那一份，当前页面的高亮也一起带过来
+    const mastNav = document.querySelector('.masthead .site-nav');
+    if (mastNav) bar.querySelector('.float-bar-nav').innerHTML = mastNav.innerHTML;
+    const mastSearch = document.querySelector('.masthead .site-search');
+    if (mastSearch) {
+      const barSearch = mastSearch.cloneNode(true);
+      barSearch.classList.add('float-bar-search');
+      barSearch.querySelector('input').value = '';
+      barSearch.querySelector('.search-results').hidden = true;
+      barSearch.querySelector('.search-results').innerHTML = '';
+      bar.querySelector('.float-bar-nav').after(barSearch);
+      bindSearch(barSearch);
+    }
     bar.inert = true; // 藏起来时不能被 Tab 到
     document.body.appendChild(bar);
     const progress = bar.querySelector('.float-bar-progress');
@@ -218,7 +231,8 @@
     let ticking = false;
     const update = () => {
       ticking = false;
-      const shown = hero.getBoundingClientRect().bottom < 60;
+      // 首屏里的导航一滚出视线就出现（首页内容少、滚不过整个首屏时也能看到）
+      const shown = (mastNav || hero).getBoundingClientRect().bottom < 0;
       bar.classList.toggle('is-shown', shown);
       bar.inert = !shown;
       backTop.classList.toggle('is-shown', shown);

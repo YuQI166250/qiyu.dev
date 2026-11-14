@@ -183,9 +183,14 @@ const countBy = (posts, key) => {
 };
 
 // ---------- 片段 ----------
-const metaLine = (p) => `<time datetime="${p.date}">${p.date}</time>`
-  + `<span class="dot" aria-hidden="true">·</span><a href="/categories/#${anchor('c', p.category)}">${esc(p.category)}</a>`
-  + (p.tags.length ? `<span class="dot" aria-hidden="true">·</span><span class="post-tags">${p.tags.map((t) => `<a href="/tags/#${anchor('t', t)}">#${esc(t)}</a>`).join(' ')}</span>` : '');
+const ICON = {
+  date: '<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12" rx="2"/><path d="M3 8.5h14M7 2.8v3.4M13 2.8v3.4"/></svg>',
+  category: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.8 5.6c0-.9.7-1.6 1.6-1.6h3.4l1.6 2h6.2c.9 0 1.6.7 1.6 1.6v7c0 .9-.7 1.6-1.6 1.6H4.4c-.9 0-1.6-.7-1.6-1.6Z"/></svg>',
+  tag: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.2 3.2h6.2l7.4 7.4-6.2 6.2-7.4-7.4Z"/><circle cx="6.8" cy="6.8" r="1.2"/></svg>',
+};
+const metaLine = (p) => `${ICON.date}<time datetime="${p.date}">${p.date}</time>`
+  + `<span class="dot" aria-hidden="true">·</span>${ICON.category}<a href="/categories/#${anchor('c', p.category)}">${esc(p.category)}</a>`
+  + (p.tags.length ? `<span class="dot" aria-hidden="true">·</span>${ICON.tag}<span class="post-tags">${p.tags.map((t) => `<a href="/tags/#${anchor('t', t)}">${esc(t)}</a>`).join(' / ')}</span>` : '');
 
 const card = (p) => `<article class="post-card">
   ${p.cover ? `<a class="post-cover" href="${p.url}" tabindex="-1" aria-hidden="true"><img src="${p.cover}" alt="" loading="lazy"></a>` : ''}

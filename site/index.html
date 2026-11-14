@@ -9,7 +9,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" as="image" href="assets/hero/hero-seaside-desktop-1200.webp"
         imagesrcset="assets/hero/hero-seaside-desktop-1200.webp 1200w, assets/hero/hero-seaside-desktop.webp 1774w"
-        imagesizes="(min-width: 1240px) 1260px, calc(100vw - 16px)" media="(min-width: 641px)">
+        imagesizes="100vw" media="(min-width: 641px) and (min-aspect-ratio: 3/4)">
   <link rel="stylesheet" href="styles.css">
   <link rel="alternate" type="application/rss+xml" title="QIYU" href="/feed.xml">
   <!-- 同步执行：先按本地时间定好首屏是白天、黄昏还是夜晚，避免先闪一下白天 -->
@@ -91,7 +91,7 @@
       <!-- 海景铺满第一屏，标题区叠在上面；下缘渐隐进纸面。遮罩作用在整个 figure 上，底图与 WebGL 画布一起淡出 -->
       <figure class="panorama is-full" id="seaside">
         <picture>
-          <source media="(max-width: 640px)" srcset="assets/hero/hero-seaside-mobile-crop.webp" width="665" height="887">
+          <source media="(max-width: 640px), (max-aspect-ratio: 3/4)" srcset="assets/hero/hero-seaside-mobile-crop.webp" width="665" height="887">
           <img src="assets/hero/hero-seaside-desktop-1200.webp"
                srcset="assets/hero/hero-seaside-desktop-1200.webp 1200w, assets/hero/hero-seaside-desktop.webp 1774w"
                sizes="(min-width: 1240px) 1260px, calc(100vw - 16px)"
@@ -127,7 +127,7 @@
     <h2 class="post-card-title"><a href="/posts/hello-seaside/">你好，海边</a></h2>
     <p class="post-card-summary">一直想要一个属于自己的角落。它最后长成了一片海：有柠檬藤、晒太阳的猫，还有偶尔漂来的瓶子。</p>
     <div class="post-card-foot">
-      <p class="post-meta"><time datetime="2026-10-30">2026-10-30</time><span class="dot" aria-hidden="true">·</span><a href="/categories/#c-随笔">随笔</a><span class="dot" aria-hidden="true">·</span><span class="post-tags"><a href="/tags/#t-网站">#网站</a> <a href="/tags/#t-碎碎念">#碎碎念</a></span></p>
+      <p class="post-meta"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12" rx="2"/><path d="M3 8.5h14M7 2.8v3.4M13 2.8v3.4"/></svg><time datetime="2026-10-30">2026-10-30</time><span class="dot" aria-hidden="true">·</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.8 5.6c0-.9.7-1.6 1.6-1.6h3.4l1.6 2h6.2c.9 0 1.6.7 1.6 1.6v7c0 .9-.7 1.6-1.6 1.6H4.4c-.9 0-1.6-.7-1.6-1.6Z"/></svg><a href="/categories/#c-随笔">随笔</a><span class="dot" aria-hidden="true">·</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.2 3.2h6.2l7.4 7.4-6.2 6.2-7.4-7.4Z"/><circle cx="6.8" cy="6.8" r="1.2"/></svg><span class="post-tags"><a href="/tags/#t-网站">网站</a> / <a href="/tags/#t-碎碎念">碎碎念</a></span></p>
       <a class="read-more" href="/posts/hello-seaside/" aria-label="阅读全文：你好，海边">阅读全文 <span aria-hidden="true">→</span></a>
     </div>
   </div>

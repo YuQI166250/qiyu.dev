@@ -34,7 +34,7 @@
     picture.className = 'scene-layer';
     picture.setAttribute('aria-hidden', 'true');
     const source = document.createElement('source');
-    source.media = '(max-width: 640px)';
+    source.media = '(max-width: 640px), (max-aspect-ratio: 3/4)'; // 与 index.html 里白天插画的 <source> 一致
     source.width = 665; source.height = 887;
     const el = document.createElement('img');
     el.alt = '';

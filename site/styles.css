@@ -680,11 +680,14 @@ figure { margin: 0; }
 
 .post-card, .page-card, .side-card {
   border: 1px solid rgb(29 75 107 / .06); border-radius: 12px;
-  background: color-mix(in srgb, var(--paper) 22%, #fff);
-  box-shadow: 0 2px 10px rgb(29 75 107 / .05);
+  background: color-mix(in srgb, var(--paper) 18%, #fff);
+  box-shadow: 0 6px 22px rgb(29 75 107 / .08);
 }
+.post-card { transition: transform .3s ease, box-shadow .3s ease; }
+.post-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgb(29 75 107 / .13); }
 .side-card { padding: 18px 20px 16px; }
-.side-title { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; color: var(--muted); font-size: 14px; font-weight: 600; letter-spacing: .1em; }
+.side-title { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; color: var(--ink); font-size: 14.5px; font-weight: 600; letter-spacing: .1em; }
+.side-title svg { color: var(--sea); }
 .side-title svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .side-list, .side-recent, .archive-list, .toc ol { margin: 0; padding: 0; list-style: none; }
 .side-list li { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 14px; color: var(--muted); }
@@ -855,9 +858,9 @@ figure { margin: 0; }
 }
 .intro.hero .decor-gull { display: none; }
 .panorama.is-full {
-  margin: 0; height: min(100svh, max(72vw, 560px));
-  -webkit-mask: linear-gradient(#000 78%, transparent);
-  mask: linear-gradient(#000 78%, transparent);
+  margin: 0; height: 100vh; height: 100svh;
+  -webkit-mask: linear-gradient(#000 90%, transparent);
+  mask: linear-gradient(#000 90%, transparent);
 }
 .panorama.is-full picture { display: block; height: 100%; }
 .panorama.is-full picture img { height: 100%; aspect-ratio: auto; object-position: 50% 62%; }
@@ -885,13 +888,13 @@ figure { margin: 0; }
 
 /* 往下看文章的提示：在画面下方轻轻上下浮动 */
 .scroll-cue {
-  position: absolute; z-index: 3; left: 50%; bottom: 23%;
-  display: grid; place-items: center; width: 46px; height: 46px; margin-left: -23px;
-  border-radius: 50%; background: rgb(255 253 247 / .5); color: #1d4b6b;
+  position: absolute; z-index: 3; left: 50%; bottom: max(18px, 3vh);
+  display: grid; place-items: center; width: 44px; height: 44px; margin-left: -22px;
+  color: var(--ink); filter: drop-shadow(0 0 6px var(--paper));
   animation: cue-bob 2.6s ease-in-out infinite;
 }
-.scroll-cue svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.scroll-cue:hover { background: rgb(255 253 247 / .8); }
+.scroll-cue svg { width: 36px; height: 36px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.scroll-cue:hover { color: var(--sea); }
 @keyframes cue-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(7px); } }
 
 /* 子页面：矮一些的横幅，露出天空和远山，标题压在天空上 */
@@ -903,14 +906,10 @@ figure { margin: 0; }
 .intro.hero.is-compact .site-search { margin-top: 18px; }
 
 @media (max-width: 640px) {
-  /* 手机：高度按画幅算，左右只裁掉一点，漂流瓶的停靠处和墙上的猫都留在画面里 */
-  .panorama.is-full { height: min(100svh, 145vw); -webkit-mask: linear-gradient(#000 82%, transparent); mask: linear-gradient(#000 82%, transparent); }
-  .panorama.is-full picture img { object-position: 62% 40%; }
   .intro.hero .masthead { padding: calc(64px + 3vh) 16px 0; }
   .intro .masthead-title { font-size: clamp(30px, 9vw, 40px); letter-spacing: 0; }
   .title-en { letter-spacing: .1em; margin-right: .02em; }
   .title-zh { letter-spacing: .08em; }
-  .scroll-cue { bottom: 19%; }
   .intro.hero.is-compact .panorama.is-full { height: 290px; }
   .intro.hero.is-compact .masthead { padding-top: 66px; }
   .intro.hero.is-compact .masthead-title { font-size: 28px; }
@@ -962,7 +961,29 @@ figure { margin: 0; }
 .float-bar-inner { display: flex; align-items: center; gap: 16px; height: 54px; }
 .float-bar-home { flex: none; font-size: 15px; font-weight: 700; letter-spacing: .06em; text-decoration: none; }
 .float-bar-home span { color: var(--sea); }
-.float-bar-title { flex: 1; min-width: 0; overflow: hidden; color: var(--muted); font-size: 14.5px; text-overflow: ellipsis; white-space: nowrap; }
+.float-bar-nav { flex: 1; display: flex; align-items: center; gap: 2px; min-width: 0; }
+.float-bar-nav a {
+  display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 11px; border-radius: 999px;
+  color: var(--muted); font-size: 14.5px; letter-spacing: .06em; text-decoration: none; white-space: nowrap;
+  transition: color .2s, background-color .2s;
+}
+.float-bar-nav svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.float-bar-nav a:hover { color: var(--ink); background: rgb(214 236 247 / .55); }
+.float-bar-nav a[aria-current="page"] { color: var(--sea); }
+.float-bar .float-bar-search { flex: none; width: 230px; margin: 0; }
+.float-bar .float-bar-search input { height: 36px; padding-left: 38px; font-size: 14px; box-shadow: none; background: rgb(255 255 255 / .7); }
+.float-bar .float-bar-search > svg { left: 13px; top: 18px; width: 16px; height: 16px; }
+@media (max-width: 1100px) { .float-bar .float-bar-search { width: 170px; } .float-bar-nav a { padding: 0 8px; } }
+@media (max-width: 960px) {
+  /* 窄一些：导航只留图标 */
+  .float-bar-nav a { font-size: 0; gap: 0; width: 38px; justify-content: center; padding: 0; }
+  .float-bar-nav svg { width: 18px; height: 18px; }
+}
+@media (max-width: 640px) {
+  .float-bar-home span { display: none; }
+  .float-bar .float-bar-search { display: none; } /* 手机上用首屏的搜索框 */
+  .float-bar-inner { gap: 6px; }
+}
 .float-bar-top {
   flex: none; display: grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 50%;
   background: transparent; color: var(--ink); cursor: pointer;
@@ -1019,3 +1040,22 @@ figure { margin: 0; }
 .back-top svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 @media (min-width: 961px) { .back-top { display: none; } }
 @media (max-width: 960px) { .float-bar-top { display: none; } }
+
+@media (max-width: 640px), (max-aspect-ratio: 3/4) {
+  .panorama.is-full picture img { object-position: 48% 40%; }
+}
+
+/* 博客区背后铺几团很淡的水彩晕染（跟着时间变色），卡片浮在上面，不再是一整片素色 */
+.blog { position: relative; isolation: isolate; }
+.blog::before {
+  content: ""; position: absolute; z-index: -1; inset: -60px -12vw -40px; pointer-events: none;
+  background:
+    radial-gradient(32% 26% at 8% 12%, var(--wash-sea), transparent 72%),
+    radial-gradient(30% 24% at 96% 28%, var(--wash-sun), transparent 72%),
+    radial-gradient(36% 26% at 30% 92%, var(--wash-leaf), transparent 72%),
+    radial-gradient(30% 22% at 86% 86%, var(--wash-sea), transparent 72%);
+  opacity: .7;
+}
+/* 文章信息前的小图标：日期、分类、标签 */
+.post-meta svg { width: 14px; height: 14px; margin-right: 4px; vertical-align: -2px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
+.post-card-title { font-size: clamp(22px, 2.1vw, 26px); }
