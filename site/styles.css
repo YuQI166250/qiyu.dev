@@ -45,8 +45,8 @@
   --wave-back: #dcd8ef; --wave-front: #c8cbea;
 }
 :root[data-time="night"] {
-  --paper: #eceef3; --ink: #1c3150; --muted: #56647e;
-  --wash-sun: rgb(250 245 222 / .8); --wash-sea: rgb(162 180 224 / .55); --wash-leaf: rgb(192 205 230 / .55);
+  --paper: #eef1f9; --ink: #1c3150; --muted: #56647e;
+  --wash-sun: rgb(255 232 178 / .62); --wash-sea: rgb(140 168 236 / .55); --wash-leaf: rgb(196 182 240 / .55);
   --wave-back: #c3cce6; --wave-front: #a7b6dc;
   --wash-night: rgb(150 166 214 / .48);
 }
@@ -846,8 +846,18 @@ figure { margin: 0; }
 :root[data-time="night"] .site-header .wordmark span { color: #a9cdf0; }
 /* color 在 body 上就已算好，换了变量还要在这里重新取一次 */
 .site-header .wordmark, .intro.hero .masthead { color: var(--ink); }
-.intro.hero .site-nav a { text-shadow: 0 0 2px var(--halo), 0 0 10px var(--halo), 0 0 22px var(--halo); }
-.intro.hero .site-nav a:not([aria-current]) { color: var(--ink); opacity: .86; }
+/* 首屏导航：压在海面和远山上，垫一条半透明的磨砂底条，文字用实色，任何时间都看得清 */
+.intro.hero .site-nav {
+  width: fit-content; max-width: 100%; margin: 14px auto 0; padding: 4px 6px; border-radius: 999px;
+  background: color-mix(in srgb, var(--paper) 45%, rgb(255 255 255 / .62));
+  border: 1px solid rgb(255 255 255 / .6);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgb(29 75 107 / .16);
+}
+:root[data-time="night"] .intro.hero .site-nav { background: rgb(16 26 54 / .55); border-color: rgb(255 255 255 / .12); box-shadow: 0 4px 16px rgb(0 0 0 / .2); }
+.intro.hero .site-nav a { color: #15405f; font-weight: 600; }
+.intro.hero .site-nav svg { stroke-width: 1.8; }
+:root[data-time="night"] .intro.hero .site-nav a { color: var(--ink); }
 :root[data-time="night"] .intro.hero .site-search input { background: rgb(236 238 243 / .82); }
 :root[data-time="night"] .intro.hero .site-search input::placeholder { color: #56647e; }
 .intro.hero::before { display: none; }
@@ -1012,7 +1022,11 @@ figure { margin: 0; }
   opacity: 0; transition: opacity var(--time-fade) ease-in-out;
 }
 .profile-banner::before { background-image: url(assets/decor/profile-header-dusk.webp); }
-.profile-banner::after { background-image: url(assets/decor/profile-header-night.webp); }
+/* 夜晚那张叠一层淡淡的月光（长春花蓝到淡紫，滤色混合），深蓝变得通透，不再发闷 */
+.profile-banner::after {
+  background-image: linear-gradient(160deg, rgb(150 176 255 / .5), rgb(206 186 255 / .38)), url(assets/decor/profile-header-night.webp);
+  background-blend-mode: screen; filter: saturate(1.35);
+}
 :root[data-time="dusk"] .profile-banner::before, :root[data-time="night"] .profile-banner::after { opacity: 1; }
 .profile-avatar {
   position: relative; width: 92px; height: 92px; margin: -46px auto 10px;
@@ -1033,7 +1047,7 @@ figure { margin: 0; }
 .back-top {
   position: fixed; z-index: 19; right: 18px; bottom: 22px;
   display: grid; place-items: center; width: 48px; height: 48px; border: 0; border-radius: 50%;
-  background: var(--sea); color: #fff; box-shadow: 0 6px 16px rgb(29 75 107 / .25); cursor: pointer;
+  background: linear-gradient(135deg, #3d8fd6, #74c0ea); color: #fff; box-shadow: 0 6px 18px rgb(61 143 214 / .35); cursor: pointer;
   opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .3s, transform .3s;
 }
 .back-top.is-shown { opacity: 1; transform: none; pointer-events: auto; }
@@ -1059,3 +1073,32 @@ figure { margin: 0; }
 /* 文章信息前的小图标：日期、分类、标签 */
 .post-meta svg { width: 14px; height: 14px; margin-right: 4px; vertical-align: -2px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
 .post-card-title { font-size: clamp(22px, 2.1vw, 26px); }
+
+/* ================= 夜晚的博客区：月光下的透亮感 =================
+   晕染更清透（见上方夜晚的 --wash-*），背景里撒几颗很淡的星点，卡片带一点冷白的月光。白天、黄昏不受影响 */
+.blog::after {
+  content: ""; position: absolute; z-index: -1; inset: -60px -12vw -40px; pointer-events: none;
+  background-image:
+    radial-gradient(2.6px 2.6px at 6% 14%, rgb(120 146 220 / .9), transparent),
+    radial-gradient(2px 2px at 18% 62%, rgb(150 132 220 / .8), transparent),
+    radial-gradient(3.2px 3.2px at 31% 8%, rgb(232 196 120 / .9), transparent),
+    radial-gradient(2px 2px at 44% 78%, rgb(120 146 220 / .8), transparent),
+    radial-gradient(2.6px 2.6px at 57% 34%, rgb(150 132 220 / .7), transparent),
+    radial-gradient(2px 2px at 69% 88%, rgb(232 196 120 / .8), transparent),
+    radial-gradient(3.2px 3.2px at 82% 12%, rgb(120 146 220 / .9), transparent),
+    radial-gradient(2px 2px at 91% 52%, rgb(150 132 220 / .8), transparent),
+    radial-gradient(2.6px 2.6px at 97% 82%, rgb(120 146 220 / .8), transparent);
+  opacity: 0; transition: opacity var(--time-fade) ease-in-out;
+}
+:root[data-time="night"] .blog::after { opacity: 1; }
+:root[data-time="night"] .blog::before { opacity: 1; }
+:root[data-time="night"] .post-card, :root[data-time="night"] .page-card, :root[data-time="night"] .side-card {
+  background: rgb(250 251 255 / .92); border-color: rgb(140 160 230 / .22);
+  box-shadow: 0 8px 26px rgb(70 90 170 / .12), inset 0 1px 0 rgb(255 255 255 / .9);
+}
+:root[data-time="night"] .side-title svg, :root[data-time="night"] .read-more { color: #4a62c4; }
+/* 头像卡片的夜晚横幅提亮一点 */
+
+/* 回到顶部按钮跟着时间换成清亮的渐变：黄昏珊瑚到杏色，夜晚长春花蓝到月光蓝 */
+:root[data-time="dusk"] .back-top { background: linear-gradient(135deg, #e48a6c, #f4b98f); box-shadow: 0 6px 18px rgb(228 138 108 / .35); }
+:root[data-time="night"] .back-top { background: linear-gradient(135deg, #6f84e6, #a3bcff); box-shadow: 0 6px 18px rgb(111 132 230 / .4); }
