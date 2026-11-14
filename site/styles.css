@@ -532,7 +532,7 @@ figure { margin: 0; }
 /* 页脚：两层半透明水彩浪向下淡回米白纸面，没有整块纯色；文字直接落在纸面上 */
 .site-footer { position: relative; margin-top: 0; }
 .footer-sea { position: relative; height: 100px; margin-top: -36px; pointer-events: none; }
-.footer-wave { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.footer-wave { position: absolute; top: 0; left: 0; width: 200%; height: 100%; overflow: visible; }
 #wave-back stop:first-child { stop-color: var(--wave-back); }
 #wave-front stop:first-child { stop-color: var(--wave-front); }
 /* 帆船停在前层浪的浪峰（左 12% 一带，约在浪区顶部 24px 处），船底被前层浪没过一点 */
@@ -1139,3 +1139,40 @@ figure { margin: 0; }
 .side-tags .tag-cloud a[data-weight="4"] { font-size: 26px; color: var(--ink); }
 .side-tags .tag-cloud a:hover { color: var(--sea); }
 @media (max-width: 960px) { .side-tags { display: none; } }
+
+/* ================= 灵动的页脚 =================
+   两层浪往左缓缓流（后浪慢、前浪快），帆船在浪上摇着来回漂，浪尖的光点一闪一闪，海鸥不时飞过 */
+.footer-sea { overflow: hidden; height: 160px; margin-top: -96px; padding-top: 60px; }
+.footer-sea .footer-wave { top: 60px; height: calc(100% - 60px); }
+.footer-wave-back { animation: wave-drift 46s linear infinite; }
+.footer-wave-front { animation: wave-drift 28s linear infinite; }
+@keyframes wave-drift { to { transform: translateX(-50%); } }
+.decor-boat { animation: bob 6s ease-in-out infinite, boat-drift 34s ease-in-out infinite alternate; }
+@keyframes boat-drift { from { translate: 0 0; } to { translate: 140px 3px; } }
+.glint {
+  position: absolute; left: var(--x); top: calc(60px + var(--y)); width: 7px; height: 7px; border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 30%, rgb(255 255 255 / 0) 70%);
+  box-shadow: 0 0 8px 2px rgb(255 255 255 / .7);
+  opacity: 0; animation: glint 3.6s ease-in-out var(--d) infinite;
+}
+:root[data-time="dusk"] .glint { box-shadow: 0 0 8px 2px rgb(255 214 170 / .8); }
+:root[data-time="night"] .glint { box-shadow: 0 0 9px 2px rgb(220 228 255 / .8); }
+@keyframes glint { 0%, 60%, 100% { opacity: 0; transform: scale(.4); } 75% { opacity: 1; transform: scale(1); } }
+.footer-gull {
+  top: 14px; left: 100%; width: 34px; opacity: 0;
+  animation: footer-gull 26s linear 4s infinite; transition: filter var(--time-fade) ease-in-out;
+}
+:root[data-time="night"] .footer-gull { filter: brightness(.75) saturate(.6); }
+@keyframes footer-gull {
+  0% { transform: translate(0, 10px); opacity: 0; }
+  4% { opacity: .9; }
+  30% { transform: translate(-60vw, -6px); }
+  50% { transform: translate(-100vw, 8px); opacity: .9; }
+  56%, 100% { transform: translate(-115vw, 0); opacity: 0; }
+}
+.footer-top span { display: inline-block; margin-left: 4px; transition: transform .3s ease; }
+.footer-top:hover span { transform: translateY(-4px); }
+.footer-copy { color: var(--muted); font-size: 13.5px; letter-spacing: .04em; }
+@media (max-width: 640px) {
+  .decor-boat { animation: bob 6s ease-in-out infinite; }
+}

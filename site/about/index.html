@@ -137,9 +137,11 @@
   </main>
 
   <footer class="site-footer">
-    <!-- 页脚海浪：两层半透明水彩浪，向下渐渐淡回纸面；帆船停在前层浪峰上，船底被浪没过一点 -->
+    <!-- 页脚海浪：两层半透明水彩浪以不同速度缓缓流动（浪形宽两倍、左右两半相同，循环时没有接缝），向下渐渐淡回纸面；
+         帆船在前层浪上摇着慢慢漂，浪尖偶尔闪一点光，海鸥不时飞过。开启「减少动态效果」时全部静止 -->
     <div class="footer-sea" aria-hidden="true">
-      <svg class="footer-wave" viewBox="0 0 1440 110" preserveAspectRatio="none">
+      <img class="decor footer-gull" src="/assets/decor/seagull.png" width="143" height="82" alt="">
+      <svg class="footer-wave footer-wave-back" viewBox="0 0 2880 110" preserveAspectRatio="none">
         <defs>
           <linearGradient id="wave-back" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#cfe7f3" stop-opacity=".7"/>
@@ -150,24 +152,29 @@
             <feDisplacementMap in="SourceGraphic" scale="6"/>
           </filter>
         </defs>
-        <path d="M0 30 C 80 36 120 40 170 40 C 270 40 350 16 450 16 C 550 16 630 40 730 40 C 830 40 910 16 1010 16 C 1110 16 1190 40 1290 40 C 1360 40 1410 34 1440 30 V110 H0Z" fill="url(#wave-back)" filter="url(#wash)"/>
-        <path d="M0 30 C 80 36 120 40 170 40 C 270 40 350 16 450 16 C 550 16 630 40 730 40 C 830 40 910 16 1010 16 C 1110 16 1190 40 1290 40 C 1360 40 1410 34 1440 30" fill="none" stroke="#1f6fa8" stroke-opacity=".12" stroke-width="1.2" filter="url(#wash)"/>
+        <path d="M0 40 C 100.8 40 139.2 16 240 16 C 340.8 16 379.2 40 480 40 C 580.8 40 619.2 16 720 16 C 820.8 16 859.2 40 960 40 C 1060.8 40 1099.2 16 1200 16 C 1300.8 16 1339.2 40 1440 40 C 1540.8 40 1579.2 16 1680 16 C 1780.8 16 1819.2 40 1920 40 C 2020.8 40 2059.2 16 2160 16 C 2260.8 16 2299.2 40 2400 40 C 2500.8 40 2539.2 16 2640 16 C 2740.8 16 2779.2 40 2880 40 V110 H0Z" fill="url(#wave-back)" filter="url(#wash)"/>
+        <path d="M0 40 C 100.8 40 139.2 16 240 16 C 340.8 16 379.2 40 480 40 C 580.8 40 619.2 16 720 16 C 820.8 16 859.2 40 960 40 C 1060.8 40 1099.2 16 1200 16 C 1300.8 16 1339.2 40 1440 40 C 1540.8 40 1579.2 16 1680 16 C 1780.8 16 1819.2 40 1920 40 C 2020.8 40 2059.2 16 2160 16 C 2260.8 16 2299.2 40 2400 40 C 2500.8 40 2539.2 16 2640 16 C 2740.8 16 2779.2 40 2880 40" fill="none" stroke="#1f6fa8" stroke-opacity=".12" stroke-width="1.2" filter="url(#wash)"/>
       </svg>
       <img class="decor decor-boat" src="/assets/decor/sailboat.png" width="107" height="164" alt="">
-      <svg class="footer-wave" viewBox="0 0 1440 110" preserveAspectRatio="none">
+      <svg class="footer-wave footer-wave-front" viewBox="0 0 2880 110" preserveAspectRatio="none">
         <defs>
           <linearGradient id="wave-front" x1="0" y1="0" x2="0" y2="1">
             <stop offset=".2" stop-color="#b9dcee" stop-opacity=".8"/>
             <stop offset=".9" stop-color="#e3f1f6" stop-opacity="0"/>
           </linearGradient>
         </defs>
-        <path d="M0 34 C 60 28 110 26 170 26 C 260 26 350 56 450 56 C 550 56 640 26 730 26 C 820 26 910 56 1010 56 C 1110 56 1200 26 1290 26 C 1360 26 1410 30 1440 34 V110 H0Z" fill="url(#wave-front)" filter="url(#wash)"/>
-        <path d="M0 34 C 60 28 110 26 170 26 C 260 26 350 56 450 56 C 550 56 640 26 730 26 C 820 26 910 56 1010 56 C 1110 56 1200 26 1290 26 C 1360 26 1410 30 1440 34" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="2.2" stroke-linecap="round" filter="url(#wash)"/>
-        <path d="M0 34 C 60 28 110 26 170 26 C 260 26 350 56 450 56 C 550 56 640 26 730 26 C 820 26 910 56 1010 56 C 1110 56 1200 26 1290 26 C 1360 26 1410 30 1440 34" fill="none" stroke="#1f6fa8" stroke-opacity=".18" stroke-width="1.2" transform="translate(0 1.6)" filter="url(#wash)"/>
+        <path d="M0 26 C 75.6 26 104.4 56 180 56 C 255.6 56 284.4 26 360 26 C 435.6 26 464.4 56 540 56 C 615.6 56 644.4 26 720 26 C 795.6 26 824.4 56 900 56 C 975.6 56 1004.4 26 1080 26 C 1155.6 26 1184.4 56 1260 56 C 1335.6 56 1364.4 26 1440 26 C 1515.6 26 1544.4 56 1620 56 C 1695.6 56 1724.4 26 1800 26 C 1875.6 26 1904.4 56 1980 56 C 2055.6 56 2084.4 26 2160 26 C 2235.6 26 2264.4 56 2340 56 C 2415.6 56 2444.4 26 2520 26 C 2595.6 26 2624.4 56 2700 56 C 2775.6 56 2804.4 26 2880 26 V110 H0Z" fill="url(#wave-front)" filter="url(#wash)"/>
+        <path d="M0 26 C 75.6 26 104.4 56 180 56 C 255.6 56 284.4 26 360 26 C 435.6 26 464.4 56 540 56 C 615.6 56 644.4 26 720 26 C 795.6 26 824.4 56 900 56 C 975.6 56 1004.4 26 1080 26 C 1155.6 26 1184.4 56 1260 56 C 1335.6 56 1364.4 26 1440 26 C 1515.6 26 1544.4 56 1620 56 C 1695.6 56 1724.4 26 1800 26 C 1875.6 26 1904.4 56 1980 56 C 2055.6 56 2084.4 26 2160 26 C 2235.6 26 2264.4 56 2340 56 C 2415.6 56 2444.4 26 2520 26 C 2595.6 26 2624.4 56 2700 56 C 2775.6 56 2804.4 26 2880 26" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="2.2" stroke-linecap="round" filter="url(#wash)"/>
+        <path d="M0 26 C 75.6 26 104.4 56 180 56 C 255.6 56 284.4 26 360 26 C 435.6 26 464.4 56 540 56 C 615.6 56 644.4 26 720 26 C 795.6 26 824.4 56 900 56 C 975.6 56 1004.4 26 1080 26 C 1155.6 26 1184.4 56 1260 56 C 1335.6 56 1364.4 26 1440 26 C 1515.6 26 1544.4 56 1620 56 C 1695.6 56 1724.4 26 1800 26 C 1875.6 26 1904.4 56 1980 56 C 2055.6 56 2084.4 26 2160 26 C 2235.6 26 2264.4 56 2340 56 C 2415.6 56 2444.4 26 2520 26 C 2595.6 26 2624.4 56 2700 56 C 2775.6 56 2804.4 26 2880 26" fill="none" stroke="#1f6fa8" stroke-opacity=".18" stroke-width="1.2" transform="translate(0 1.6)" filter="url(#wash)"/>
       </svg>
+      <span class="glint" style="--x: 18%; --y: 44px; --d: 0s"></span>
+      <span class="glint" style="--x: 37%; --y: 52px; --d: 1.4s"></span>
+      <span class="glint" style="--x: 58%; --y: 40px; --d: 2.6s"></span>
+      <span class="glint" style="--x: 76%; --y: 50px; --d: .8s"></span>
+      <span class="glint" style="--x: 91%; --y: 43px; --d: 2s"></span>
     </div>
     <div class="footer-inner shell">
-      <p class="footer-copy">© 2026 qiyu.dev</p>
+      <p class="footer-copy">© 2026 QIYU的海边小世界 · qiyu.dev</p>
       <a class="footer-top" href="#main">回到顶部 <span aria-hidden="true">↑</span></a>
     </div>
   </footer>
