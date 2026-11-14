@@ -15,6 +15,8 @@
     desktop: { box: [577 / 1774, 580 / 887, 728 / 1774, 635 / 887], edge: 'assets/hero/panorama-edge-desktop.png' },
     mobile: { box: [148 / 665, 580 / 887, 298 / 665, 634 / 887], edge: 'assets/hero/panorama-edge-mobile.png' },
   };
+  // 墙上那只海鸥的落脚点（原图比例）和宽度（占原图宽度的比例）；铺满全屏时裁切会变，所以跟猫一起按原图坐标摆
+  const GULLS = { desktop: { at: [0.591, 0.797], width: 0.05 }, mobile: { at: [0.496, 0.708], width: 0.15 } };
   const HEAD = 0.78; // 猫头大约在猫范围从左往右 78% 处，文字浮在头的上方
   // 头两下总是这两句；之后在「这个时间专属的」和「什么时候都能说的」之间交替着轮
   const FIRST = ['呼噜……', '这里的位置已经被我占了。'];
@@ -52,7 +54,8 @@
 
   async function place() {
     if (!img.complete || !img.naturalWidth) return;
-    const def = CATS[img.currentSrc.includes('mobile') ? 'mobile' : 'desktop'];
+    const kind = img.currentSrc.includes('mobile') ? 'mobile' : 'desktop';
+    const def = CATS[kind];
     const fw = figure.clientWidth, fh = figure.clientHeight;
     const iw = img.naturalWidth, ih = img.naturalHeight;
     const s = Math.max(fw / iw, fh / ih); // object-fit: cover
@@ -61,8 +64,17 @@
     const [u0, v0, u1, v1] = def.box;
     const r = { left: ox + u0 * iw * s, top: oy + v0 * ih * s, width: (u1 - u0) * iw * s, height: (v1 - v0) * ih * s };
 
-    let visible = r.left >= 0 && r.top >= 0 && r.left + r.width <= fw && r.top + r.height <= fh;
-    if (visible) {
+    const wallGull = figure.querySelector('.wall-gull');
+    if (wallGull) {
+      const g = GULLS[kind];
+      Object.assign(wallGull.style, { left: ox + g.at[0] * iw * s + 'px', top: oy + g.at[1] * ih * s + 'px', width: g.width * iw * s + 'px' });
+      wallGull.classList.add('is-placed');
+    }
+
+    // 铺满全屏的海景只有下缘渐隐：猫不能落进最下面那段淡出里；四周带水彩边缘时按边缘遮罩判断
+    const full = figure.classList.contains('is-full');
+    let visible = r.left >= 0 && r.top >= 0 && r.left + r.width <= fw && r.top + r.height <= (full ? fh * 0.8 : fh);
+    if (visible && !full) {
       const alpha = await loadEdge(def.edge);
       // 猫身中心和头部都要落在遮罩基本不透明的区域里
       visible = !alpha || [0.5, HEAD].every((k) => alpha((r.left + r.width * k) / fw, (r.top + r.height * 0.5) / fh) > 0.85);

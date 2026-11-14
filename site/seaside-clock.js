@@ -47,8 +47,8 @@
   root.classList.add('time-instant', 'time-boot'); // time-boot：海景先藏着，等这个时间的插画下载好
   // 和白天插画一样尽早开始下载
   for (const [media, srcset] of [
-    ['(min-width: 641px)', `assets/hero/hero-seaside-desktop-${initial}-1200.webp 1200w, assets/hero/hero-seaside-desktop-${initial}.webp 1774w`],
-    ['(max-width: 640px)', `assets/hero/hero-seaside-mobile-${initial}.webp 665w`],
+    ['(min-width: 641px)', `/assets/hero/hero-seaside-desktop-${initial}-1200.webp 1200w, /assets/hero/hero-seaside-desktop-${initial}.webp 1774w`],
+    ['(max-width: 640px)', `/assets/hero/hero-seaside-mobile-${initial}.webp 665w`],
   ]) {
     const link = document.createElement('link');
     link.rel = 'preload'; link.as = 'image'; link.media = media;

@@ -1,0 +1,31 @@
+/* giscus 评论区的配色：在官方浅色主题上换成网站的纸色、墨蓝和海蓝。
+   由 blog.js 以绝对网址传给 giscus，在评论区的 iframe 里加载。 */
+@import url("https://giscus.app/themes/light.css");
+
+main {
+  --color-canvas-default: #fffdf7;
+  --color-canvas-subtle: #f8f3e6;
+  --color-canvas-inset: #f6f1e3;
+  --color-canvas-overlay: #fffdf7;
+  --color-fg-default: #1d4b6b;
+  --color-fg-muted: #557587;
+  --color-fg-subtle: #7b93a1;
+  --color-border-default: #e4e1d4;
+  --color-border-muted: #ece8dc;
+  --color-accent-fg: #1f6fa8;
+  --color-accent-emphasis: #1f6fa8;
+  --color-accent-muted: rgb(31 111 168 / .4);
+  --color-accent-subtle: #e6f2f9;
+  --color-btn-text: #1d4b6b;
+  --color-btn-bg: #f8f3e6;
+  --color-btn-hover-bg: #f1ead8;
+  --color-btn-primary-text: #fff;
+  --color-btn-primary-bg: #1f6fa8;
+  --color-btn-primary-hover-bg: #195d8e;
+  --color-btn-primary-selected-bg: #174f7a;
+  --color-btn-primary-disabled-bg: #8fb7d4;
+  --color-segmented-control-bg: #f1ead8;
+  --color-segmented-control-button-bg: #fffdf7;
+  --color-social-reaction-bg-hover: #f1ead8;
+  --color-social-reaction-bg-reacted-hover: #d6ecf7;
+}

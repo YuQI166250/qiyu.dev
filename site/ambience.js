@@ -13,7 +13,7 @@
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!button || !label || !AC) return; // 不支持 Web Audio 时开关保持隐藏
 
-  const BASE = 'assets/audio/';
+  const BASE = '/assets/audio/';
   const PAD = 1; // 循环文件首尾各多放了 1 秒（见 scripts/make-ambience.py）
   const LOOPS = { waves: 21.7699, wind: 36 };
   const GULLS = [[1, 3.3], [5.3, 6], [12.3, 5.4]]; // 海鸥音效表里每组叫声的 [开始, 时长]（秒），尾巴已带长淡出

@@ -1,4 +1,4 @@
-# 推送到 main 时，把 site/ 原样发布到 GitHub Pages（无构建步骤）。
+# 推送到 main 时，先把 content/ 里的文章生成成页面，再把 site/ 发布到 GitHub Pages。
 name: Deploy to GitHub Pages
 
 on:
@@ -24,6 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Build blog pages
+        run: node scripts/build-blog.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

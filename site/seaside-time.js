@@ -57,9 +57,9 @@
         const el = layer.img;
         el.onload = () => { el.onload = el.onerror = null; resolve(); };
         el.onerror = () => { el.onload = el.onerror = null; reject(new Error('无法加载海景图片：' + time)); };
-        layer.source.srcset = `assets/hero/hero-seaside-mobile-${time}.webp`;
-        el.srcset = `assets/hero/hero-seaside-desktop-${time}-1200.webp 1200w, assets/hero/hero-seaside-desktop-${time}.webp 1774w`;
-        el.src = `assets/hero/hero-seaside-desktop-${time}-1200.webp`;
+        layer.source.srcset = `/assets/hero/hero-seaside-mobile-${time}.webp`;
+        el.srcset = `/assets/hero/hero-seaside-desktop-${time}-1200.webp 1200w, /assets/hero/hero-seaside-desktop-${time}.webp 1774w`;
+        el.src = `/assets/hero/hero-seaside-desktop-${time}-1200.webp`;
         el.style.opacity = '0';
       })
         .then(() => layer.img.decode().catch(() => {}))

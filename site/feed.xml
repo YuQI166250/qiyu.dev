@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>QIYU的海边小世界</title>
+  <link>https://qiyu.dev/</link>
+  <atom:link href="https://qiyu.dev/feed.xml" rel="self" type="application/rss+xml"/>
+  <description>保持热爱，奔赴山海。</description>
+  <language>zh-CN</language>
+  <item>
+    <title>你好，海边</title>
+    <link>https://qiyu.dev/posts/hello-seaside/</link>
+    <guid>https://qiyu.dev/posts/hello-seaside/</guid>
+    <pubDate>Thu, 29 Oct 2026 16:00:00 GMT</pubDate>
+    <category>随笔</category>
+    <description>一直想要一个属于自己的角落。它最后长成了一片海：有柠檬藤、晒太阳的猫，还有偶尔漂来的瓶子。</description>
+  </item>
+</channel>
+</rss>
