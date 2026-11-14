@@ -699,7 +699,7 @@ figure { margin: 0; }
 .side-list span::after { content: ")"; }
 .side-list a, .side-recent a, .tag-cloud a, .archive-list a, .post-meta a { text-decoration: none; }
 .side-list a:hover, .side-recent a:hover, .tag-cloud a:hover, .archive-list a:hover, .post-meta a:hover { color: var(--sea); }
-.side-recent li { padding: 5px 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.side-recent li { color: var(--muted); font-size: 14px; line-height: 1.6; }
 .tag-cloud { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; color: var(--muted); }
 .tag-cloud a { font-size: 13.5px; }
 .tag-cloud a[data-weight="2"] { font-size: 15.5px; color: var(--ink); }
@@ -1175,4 +1175,50 @@ figure { margin: 0; }
 .footer-copy { color: var(--muted); font-size: 13.5px; letter-spacing: .04em; }
 @media (max-width: 640px) {
   .decor-boat { animation: bob 6s ease-in-out infinite; }
+}
+
+/* ================= 侧栏列表的悬停动画 =================
+   「最近更新」和「分类」的每一行：鼠标移上去，整行从左边化开一抹水彩，左侧竖线从中间往上下长出来（海蓝到阳光黄），
+   文字轻轻右移变成海蓝；「最近更新」的行尾滑出一个小箭头。整行都能点 */
+.side-recent li, .side-list li { position: relative; margin: 0 -20px; padding: 0; isolation: isolate; }
+.side-recent li a, .side-list li a {
+  position: relative; display: block; padding: 7px 44px 7px 20px; color: inherit;
+  transition: color .3s ease, transform .35s cubic-bezier(.3, .7, .3, 1);
+}
+.side-list li { display: block; }
+.side-list li a { padding-right: 56px; }
+.side-list li span { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); pointer-events: none; transition: color .3s; }
+/* 水彩底色：从左往右化开 */
+.side-recent li::after, .side-list li::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(90deg, rgb(214 236 247 / .85), rgb(214 236 247 / .35) 55%, rgb(214 236 247 / 0));
+  clip-path: inset(0 100% 0 0); transition: clip-path .45s cubic-bezier(.3, .7, .3, 1);
+}
+/* 左侧竖线：从中间往上下长出来 */
+.side-recent li::before, .side-list li::before {
+  content: ""; position: absolute; left: 0; top: 14%; bottom: 14%; width: 3px; border-radius: 0 3px 3px 0; pointer-events: none;
+  background: linear-gradient(var(--sea), var(--sun));
+  transform: scaleY(0); transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+}
+/* 行尾的小箭头 */
+.side-recent li a::after {
+  content: "→"; position: absolute; right: 20px; top: 50%; color: var(--sea);
+  opacity: 0; transform: translate(-8px, -50%); transition: opacity .3s ease, transform .35s cubic-bezier(.3, .7, .3, 1);
+}
+.side-recent li:hover::after, .side-list li:hover::after, .side-recent li:focus-within::after, .side-list li:focus-within::after { clip-path: inset(0 0 0 0); }
+.side-recent li:hover::before, .side-list li:hover::before, .side-recent li:focus-within::before, .side-list li:focus-within::before { transform: scaleY(1); }
+.side-recent li:hover a, .side-list li:hover a, .side-recent li a:focus-visible, .side-list li a:focus-visible { color: var(--sea); transform: translateX(6px); }
+.side-recent li:hover a::after, .side-recent li a:focus-visible::after { opacity: 1; transform: translate(0, -50%); }
+.side-list li:hover span { color: var(--sea); }
+.side-recent li a:focus-visible, .side-list li a:focus-visible { outline: none; }
+/* 夜晚：月光色 */
+:root[data-time="night"] .side-recent li::after, :root[data-time="night"] .side-list li::after {
+  background: linear-gradient(90deg, rgb(170 186 246 / .45), rgb(196 182 240 / .2) 55%, rgb(196 182 240 / 0));
+}
+:root[data-time="night"] .side-recent li::before, :root[data-time="night"] .side-list li::before { background: linear-gradient(#6f84e6, #ffe9a8); }
+:root[data-time="night"] .side-recent li:hover a, :root[data-time="night"] .side-list li:hover a,
+:root[data-time="night"] .side-recent li a::after, :root[data-time="night"] .side-list li:hover span { color: #4a62c4; }
+/* 黄昏：杏色晕染 */
+:root[data-time="dusk"] .side-recent li::after, :root[data-time="dusk"] .side-list li::after {
+  background: linear-gradient(90deg, rgb(253 222 196 / .7), rgb(253 222 196 / .3) 55%, rgb(253 222 196 / 0));
 }
