@@ -122,6 +122,9 @@ figure { margin: 0; }
 .time-switch [data-time="day"].is-current { color: #c98f12; }
 .time-switch [data-time="dusk"].is-current { color: #d0703a; }
 .time-switch [data-time="night"].is-current { color: #3d5596; }
+/* 夜里画面上方是深色天空：自动模式下「当前是夜晚」的月亮用月光色，带一点柔光，不再融进夜空 */
+:root[data-time="night"] .time-switch [data-time="night"].is-current { color: #ffe9a8; opacity: 1; filter: drop-shadow(0 0 5px rgb(255 233 168 / .7)); }
+:root[data-time="night"] .time-switch [data-time="night"].is-current svg { fill: rgb(255 233 168 / .25); }
 /* 「自动」：和三个时间隔一道很淡的竖线，图标更小一点 */
 .time-switch [data-mode="auto"] { position: relative; margin-left: 7px; }
 .time-switch [data-mode="auto"][hidden] { display: none; }
