@@ -3,6 +3,7 @@ title: 你好，海边
 date: 2026-10-30
 category: 随笔
 tags: [网站, 碎碎念]
+cover: /assets/posts/hello-seaside-cover.webp
 summary: 一直想要一个属于自己的角落。它最后长成了一片海：有柠檬藤、晒太阳的猫，还有偶尔漂来的瓶子。
 ---
 
