@@ -659,7 +659,7 @@ figure { margin: 0; }
 }
 .site-nav svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .site-nav a:hover { color: var(--ink); background-color: rgb(214 236 247 / .5); }
-.site-nav a[aria-current="page"] { color: var(--ink); background-image: linear-gradient(var(--sea), var(--sea)); background-position: 50% calc(100% - 7px); background-size: calc(100% - 26px) 2px; background-repeat: no-repeat; }
+.site-nav a[aria-current="page"] { color: var(--ink); }
 .intro:has(.masthead) { padding-bottom: clamp(12px, 2vw, 28px); }
 /* 标题居中后，飞过的海鸥挪到右上方，不压在名字上 */
 .intro .decor-gull { top: 64px; right: 9%; }
@@ -894,7 +894,7 @@ figure { margin: 0; }
 :root[data-time="night"] .intro.hero .site-search > svg { stroke: #56647e; }
 .intro.hero .site-nav a:hover { background-color: rgb(255 253 247 / .5); }
 :root[data-time="night"] .intro.hero .site-nav a:hover { background-color: rgb(255 255 255 / .14); }
-:root[data-time="night"] .intro.hero .site-nav a[aria-current="page"] { background-image: linear-gradient(#a9cdf0, #a9cdf0); }
+:root[data-time="night"] .intro.hero .site-nav a::after { background: #a9cdf0; }
 
 /* 往下看文章的提示：在画面下方轻轻上下浮动 */
 .scroll-cue {
@@ -1102,3 +1102,28 @@ figure { margin: 0; }
 /* 回到顶部按钮跟着时间换成清亮的渐变：黄昏珊瑚到杏色，夜晚长春花蓝到月光蓝 */
 :root[data-time="dusk"] .back-top { background: linear-gradient(135deg, #e48a6c, #f4b98f); box-shadow: 0 6px 18px rgb(228 138 108 / .35); }
 :root[data-time="night"] .back-top { background: linear-gradient(135deg, #6f84e6, #a3bcff); box-shadow: 0 6px 18px rgb(111 132 230 / .4); }
+
+/* 导航的悬停动画：鼠标移上去，下面从中间长出一条下划线，小图标轻轻晃一下；当前页的下划线一直在 */
+.site-nav a, .float-bar-nav a { position: relative; }
+.site-nav a::after, .float-bar-nav a::after {
+  content: ""; position: absolute; left: 13px; right: 13px; bottom: 6px; height: 2px; border-radius: 2px;
+  background: var(--sea); transform: scaleX(0); transition: transform .3s cubic-bezier(.3, .7, .3, 1);
+}
+.float-bar-nav a::after { left: 11px; right: 11px; bottom: 4px; }
+.site-nav a:hover::after, .site-nav a:focus-visible::after, .site-nav a[aria-current="page"]::after,
+.float-bar-nav a:hover::after, .float-bar-nav a:focus-visible::after, .float-bar-nav a[aria-current="page"]::after { transform: scaleX(1); }
+.site-nav a:hover svg, .float-bar-nav a:hover svg { animation: nav-wiggle .6s ease; }
+@keyframes nav-wiggle {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  25% { transform: rotate(-12deg) translateY(-2px); }
+  55% { transform: rotate(9deg) translateY(-1px); }
+  80% { transform: rotate(-4deg); }
+}
+/* 悬停时不再垫底色，只靠下划线和图标动画 */
+.site-nav a:hover, .intro.hero .site-nav a:hover, :root[data-time="night"] .intro.hero .site-nav a:hover, .float-bar-nav a:hover { background-color: transparent; }
+@media (max-width: 960px) {
+  .float-bar-nav a::after { left: 9px; right: 9px; }
+}
+@media (max-width: 640px) {
+  .site-nav a::after { left: 8px; right: 8px; bottom: 7px; }
+}
