@@ -1048,7 +1048,7 @@ figure { margin: 0; }
   .blog { display: flex; flex-direction: column; }
 }
 
-/* 窄屏：右下角的圆形「回到顶部」按钮（宽屏用顶栏里的箭头） */
+/* 右下角的圆形「回到顶部」按钮：电脑和手机都只用这一个（顶栏和页脚里不再放） */
 .back-top {
   position: fixed; z-index: 19; right: 18px; bottom: 22px;
   display: grid; place-items: center; width: 48px; height: 48px; border: 0; border-radius: 50%;
@@ -1057,8 +1057,10 @@ figure { margin: 0; }
 }
 .back-top.is-shown { opacity: 1; transform: none; pointer-events: auto; }
 .back-top svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-@media (min-width: 961px) { .back-top { display: none; } }
-@media (max-width: 960px) { .float-bar-top { display: none; } }
+@media (min-width: 961px) { .back-top { right: 28px; bottom: 30px; width: 46px; height: 46px; } }
+.back-top:hover { transform: translateY(-3px); }
+.back-top:hover svg { animation: back-top-nudge .6s ease; }
+@keyframes back-top-nudge { 40% { transform: translateY(-3px); } }
 
 @media (max-width: 640px), (max-aspect-ratio: 3/4) {
   .panorama.is-full picture img { object-position: 48% 40%; }

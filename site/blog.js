@@ -209,7 +209,6 @@
     bar.innerHTML = `<div class="float-bar-inner shell">
       <a class="float-bar-home" href="/">QIYU<span>的海边小世界</span></a>
       <nav class="float-bar-nav" aria-label="顶栏导航"></nav>
-      <button class="float-bar-top" type="button" aria-label="回到顶部"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg></button>
     </div>
     <div class="float-bar-progress" aria-hidden="true"></div>`;
     // 导航和搜索框照搬标题区的那一份，当前页面的高亮也一起带过来
@@ -229,7 +228,7 @@
     document.body.appendChild(bar);
     const progress = bar.querySelector('.float-bar-progress');
     const article = document.querySelector('article.post .prose');
-    // 窄屏右下角的圆形「回到顶部」（宽屏用顶栏里的箭头，由 CSS 切换）
+    // 右下角的圆形「回到顶部」：电脑和手机都只用这一个
     const backTop = document.createElement('button');
     backTop.type = 'button';
     backTop.className = 'back-top';
@@ -237,7 +236,6 @@
     backTop.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>';
     document.body.appendChild(backTop);
     const toTop = () => window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    bar.querySelector('.float-bar-top').addEventListener('click', toTop);
     backTop.addEventListener('click', toTop);
     let ticking = false;
     const update = () => {
