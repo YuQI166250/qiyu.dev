@@ -315,8 +315,10 @@
     if (!running) render();
   }
 
-  // 与 <img> 的 object-fit: cover 和 object-position 完全对齐
-  function resize() {
+  // 与 <img> 的 object-fit: cover 和 object-position 完全对齐。
+  // realloc = false 时只重算对齐参数、不重新分配画布缓冲区：拖动窗口时每一帧都这样做，
+  // 画面始终按新的画框裁切、不会被拉伸；停下来后再按新尺寸分配一次缓冲区，恢复清晰度
+  function resize(realloc = true) {
     if (!scene) return;
     const rect = figure.getBoundingClientRect();
     const iw = img.naturalWidth, ih = img.naturalHeight;
@@ -331,8 +333,8 @@
     const maxDpr = coarse ? 1.5 : 2;
     const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, maxDpr, iw / shown));
     const w = Math.round(rect.width * dpr), h = Math.round(rect.height * dpr);
-    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
-    gl.viewport(0, 0, w, h);
+    if (realloc && (canvas.width !== w || canvas.height !== h)) { canvas.width = w; canvas.height = h; }
+    gl.viewport(0, 0, canvas.width, canvas.height);
     gl.uniform2f(uniforms.uScale, sx, sy);
     gl.uniform2f(uniforms.uOffset, view.offset[0], view.offset[1]);
     gl.uniform2f(uniforms.uPx, sx / rect.width, sy / rect.height);
@@ -463,10 +465,14 @@
     window.addEventListener('pagehide', stop);
     window.addEventListener('pageshow', update);
 
+    // 拖动窗口时：当场重新对齐并重画（resize 事件在这一帧绘制之前触发，不会有一帧错位）；停下 150ms 后再分配缓冲区
     let timer = 0;
     window.addEventListener('resize', () => {
+      if (!scene) return;
+      resize(false);
+      render();
       clearTimeout(timer);
-      timer = setTimeout(() => { resize(); if (!running && scene) render(); }, 120);
+      timer = setTimeout(() => { resize(); render(); }, 150);
     });
     // 跨过手机断点时 <picture> 会换图，重新准备场景
     img.addEventListener('load', () => { if (img.currentSrc !== sceneKey) useCurrentImage().catch(fallBack); });

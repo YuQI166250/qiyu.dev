@@ -258,6 +258,7 @@ function shellFrom(index) {
   <title>${esc(title)}</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="preload" href="/assets/fonts/title-font.woff" as="font" type="font/woff" crossorigin>
   <link rel="alternate" type="application/rss+xml" title="${SITE_NAME}" href="/feed.xml">
   <script src="/seaside-clock.js"></script>
   <script src="/postcard.js" defer></script>
@@ -300,10 +301,28 @@ ${side}
 const markNav = (html, href) => html.replace(new RegExp(`<a href="${href.replace(/[/]/g, '\\/')}"`), `<a href="${href}" aria-current="page"`);
 
 // ---------- 生成 ----------
+const written = [];
 async function write(rel, content) {
   const file = path.join(SITE, rel);
   await mkdir(path.dirname(file), { recursive: true });
   await writeFile(file, content);
+  if (rel.endsWith('.html')) written.push(content);
+}
+
+// 标题字体（scripts/subset-fonts.py 生成的子集）里有没有缺字：规则与那个脚本一致，缺了就提醒重新生成
+async function checkTitleFont(pages) {
+  let have;
+  try { have = new Set(await readFile(path.join(ROOT, 'scripts', 'title-font-chars.txt'), 'utf8')); } catch { return; }
+  const strip = (s) => s.replace(/<[^>]+>/g, '').replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'" })[e]);
+  const tagRe = /<(h[1-3])\b[^>]*>([\s\S]*?)<\/\1>/g;
+  const classRe = /<(\w+)\b[^>]*class="[^"]*\b(?:masthead-title|lead|post-card-title|post-title|page-title|profile-name|archive-year|comments-title)\b[^"]*"[^>]*>([\s\S]*?)<\/\1>/g;
+  const missing = new Set();
+  for (const html of pages) {
+    for (const re of [tagRe, classRe]) {
+      for (const m of html.matchAll(re)) for (const c of strip(m[2])) if (!/\s/.test(c) && !have.has(c)) missing.add(c);
+    }
+  }
+  if (missing.size) console.warn(`标题字体缺 ${missing.size} 个字（${[...missing].join('')}），先用系统字体显示。运行 python scripts/subset-fonts.py 重新生成。`);
 }
 
 const posts = await loadPosts();
@@ -435,4 +454,5 @@ ${posts.slice(0, 20).map((p) => `  <item>
 </rss>
 `);
 
+await checkTitleFont([home, ...written]);
 console.log(`博客已生成：${posts.length} 篇文章`);

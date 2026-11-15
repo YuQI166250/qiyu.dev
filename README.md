@@ -19,6 +19,7 @@
   - `bottle.js`：漂流瓶彩蛋。停留一两分钟后偶尔有瓶子从海面漂来，点开是一封随机的海边来信。
   - `assets/`：插画与素材。
 - `scripts/build-blog.mjs`：博客生成器。
+- `scripts/subset-fonts.py`：标题字体子集。首屏大标题、文章和页面标题、正文小标题用「得意黑」（Smiley Sans，SIL OFL 1.1），网站里只放标题用到的字（`site/assets/fonts/title-font.woff`，按许可证改名为 QiyuTitle，许可证在同目录）。
 - `scripts/`：其余是素材处理脚本（生成响应式图片、黄昏与夜晚海景、漂流瓶、动效蒙版、水彩边缘遮罩、环境音母带）。它们读取的原始美术素材不在本仓库中。
 - `server.mjs`：本地预览服务器。
 - `.github/workflows/pages.yml`：部署到 GitHub Pages。
@@ -46,6 +47,12 @@ node scripts/build-blog.mjs
 ```
 
 推送到 `main` 后，GitHub Actions 也会先运行这个脚本再发布。写了 `draft: true` 的文章不会生成。
+
+如果生成时提示「标题字体缺字」，说明新标题里有字体子集里还没有的字（会先用系统字体显示）。运行下面的命令重新裁一次字体，再提交 `site/assets/fonts/title-font.woff` 和 `scripts/title-font-chars.txt`。它需要 fontTools，以及放在本机 `design/fonts/` 里的原字体 `SmileySans-Oblique.ttf`（可从 https://github.com/atelier-anchor/smiley-sans/releases 下载）：
+
+```bash
+python scripts/subset-fonts.py
+```
 
 ## 本地预览
 
