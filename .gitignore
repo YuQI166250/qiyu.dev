@@ -3,6 +3,7 @@
 /*
 !/.gitignore
 !/README.md
+!/LICENSE
 !/server.mjs
 !/scripts/
 !/content/

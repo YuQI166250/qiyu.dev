@@ -1,0 +1,36 @@
+Copyright (c) 2026 QIYU (qiyu.dev). All rights reserved.
+版权所有 (c) 2026 QIYU（qiyu.dev）。保留所有权利。
+
+本仓库及 qiyu.dev 网站中的全部内容，包括但不限于源代码、页面设计与布局、插画与图片、
+动效、音频、文章与文字，均受著作权保护，除下文另有说明的第三方内容外，著作权归 QIYU 所有。
+
+本仓库公开，仅供浏览和学习思路。未经书面许可，不授予任何人以下权利：
+  - 复制、转载或镜像本网站或其中的任何部分；
+  - 修改、改编，或以本项目为基础制作衍生作品（包括搭建外观相似的网站）；
+  - 发布、分发、再许可或出售本项目的任何部分；
+  - 将任何内容用于商业用途，或用于训练机器学习模型。
+
+在 GitHub 上浏览和 Fork 本仓库，仅限于 GitHub 服务条款所允许的范围，
+不构成上述任何授权。如需使用，请先通过 GitHub 联系作者取得许可。
+
+第三方内容不在本声明范围内，按其各自的许可或权利归属：
+  - 标题字体 site/assets/fonts/title-font.woff 基于「得意黑」（Smiley Sans），
+    © atelierAnchor，以 SIL Open Font License 1.1 授权，许可证见同目录的 title-font-LICENSE.txt；
+  - 头像图片 site/assets/avatar.webp 的著作权归原作者所有；
+  - 评论区由 giscus 提供，评论内容的权利归各评论者所有。
+
+----------------------------------------------------------------------
+
+All content in this repository and on the qiyu.dev website — including but not limited to
+source code, page design and layout, illustrations and images, animations, audio, and
+articles — is protected by copyright and, except for the third-party content listed above,
+is owned by QIYU.
+
+This repository is public for viewing and learning only. No license is granted to copy,
+mirror, modify, adapt, create derivative works from (including look-alike websites),
+publish, distribute, sublicense, sell, use commercially, or use for machine-learning
+training any part of this project without prior written permission.
+
+Viewing and forking on GitHub are permitted only to the extent required by the GitHub
+Terms of Service and do not grant any of the rights above. To request permission,
+please contact the author through GitHub.

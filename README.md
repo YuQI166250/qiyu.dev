@@ -83,3 +83,7 @@ node server.mjs site
 | 海浪 | [Gentle Ocean Waves Loop](https://freesound.org/people/kkenny101/sounds/852826/) | kkenny101 | CC0 1.0 |
 | 海风 | [Sea Breeze Birds Wind.wav](https://freesound.org/people/jordir/sounds/360448/) | jordir | CC0 1.0 |
 | 海鸥 | [Seagulls distant.wav](https://freesound.org/people/Ambientsoundapp/sounds/537854/) | Ambientsoundapp | CC0 1.0 |
+
+## 版权
+
+本项目公开源码，仅供浏览和学习思路，**不是开源项目**。代码、页面设计、插画、动效、音频和文章均保留所有权利，未经许可不得复制、修改、转载、搭建相似网站或用于商业用途，详见 [LICENSE](LICENSE)。标题字体等第三方内容按其各自的许可证。
