@@ -1501,3 +1501,10 @@ body::before {
   .profile-banner { margin: 0 -16px; }
   .profile-card .profile-bio { font-size: 13px; letter-spacing: .02em; }
 }
+
+/* 页脚版权：手机上「保留所有权利」单独一行，右边给圆形「回到顶部」按钮留出位置 */
+@media (max-width: 640px) {
+  .footer-rights { display: block; }
+  .footer-rights > span { display: none; }
+  .footer-inner { padding-right: 64px; }
+}
