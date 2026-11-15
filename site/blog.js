@@ -167,11 +167,12 @@
   // ---------- 评论：giscus，滚到评论区附近才加载 ----------
   const comments = document.querySelector('.comments');
   if (comments) {
-    // 自定义配色要从 https 加载（giscus 的窗口是 https）；本地 http 预览时用官方主题。夜晚换深色
+    // 自定义配色要从 https 加载（giscus 的窗口是 https）；本地 http 预览时用官方主题。黄昏换暖色，夜晚换深色
     const giscusTheme = () => {
-      const night = document.documentElement.dataset.time === 'night';
-      if (location.protocol !== 'https:') return night ? 'dark' : 'light';
-      return new URL(night ? '/giscus-theme-night.css' : '/giscus-theme.css', location.origin).href;
+      const time = document.documentElement.dataset.time;
+      if (location.protocol !== 'https:') return time === 'night' ? 'dark' : 'light';
+      const file = { dusk: '/giscus-theme-dusk.css', night: '/giscus-theme-night.css' }[time] || '/giscus-theme.css';
+      return new URL(file, location.origin).href;
     };
     // 切换海边时间时，已经加载好的评论区跟着换配色
     new MutationObserver(() => {

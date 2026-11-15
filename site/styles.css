@@ -40,9 +40,10 @@
 /* 黄昏：纸面带一点杏色，晕染换成杏黄、薰衣草紫和淡玫瑰；夜晚：深色模式，纸面换成和夜景天空同色系的深靛蓝，
    文字换成月白，晕染变成很淡的蓝紫光，像夜里的海面（具体的卡片、代码块等见文末「夜晚的深色模式」） */
 :root[data-time="dusk"] {
-  --paper: #fcf3e8; --ink: #27466a; --muted: #69708a;
-  --wash-sun: rgb(253 214 180 / .72); --wash-sea: rgb(216 208 238 / .62); --wash-leaf: rgb(248 216 206 / .55);
-  --wave-back: #dcd8ef; --wave-front: #c8cbea;
+  --paper: #fbeee3; --ink: #3a3a5c; --muted: #7c6f86;
+  --sea: #c4603e; --sun: #f2a64a;
+  --wash-sun: rgb(255 190 130 / .62); --wash-sea: rgb(206 184 238 / .55); --wash-leaf: rgb(250 184 184 / .5);
+  --wave-back: #f3c9b4; --wave-front: #d7bde3;
 }
 :root[data-time="night"] {
   --paper: #111a33; --ink: #e4e9f5; --muted: #a3b0cc;
@@ -1266,5 +1267,104 @@ figure { margin: 0; }
 :root[data-time="night"] .footer-wave path[stroke="#1f6fa8"] { stroke: #8db8ef; }
 /* 博客区背后的晕染和星点在下缘渐隐，不在页脚上方留下一道直边 */
 :root[data-time="night"] .blog::before, :root[data-time="night"] .blog::after {
+  -webkit-mask: linear-gradient(#000 calc(100% - 220px), transparent); mask: linear-gradient(#000 calc(100% - 220px), transparent);
+}
+
+/* ================= 黄昏的氛围 =================
+   像日落前的半小时：页面上方留着一团橘金色的余晖，往下慢慢褪成薰衣草紫（固定在窗口上，滚动时一直在）；
+   空中飘着几粒金色的光尘，强调色换成珊瑚橘（见开头 :root[data-time="dusk"] 的 --sea），卡片像被夕阳照着的暖白纸 */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(70% 46% at 88% 0%, rgb(255 186 120 / .42), transparent 70%),
+    radial-gradient(50% 40% at 0% 100%, rgb(214 184 240 / .4), transparent 72%),
+    linear-gradient(rgb(255 222 190 / .32), rgb(255 222 190 / 0) 42%, rgb(232 204 236 / 0) 62%, rgb(226 200 240 / .4));
+  opacity: 0; transition: opacity var(--time-fade) ease-in-out;
+}
+:root[data-time="dusk"] body::after { opacity: 1; }
+/* 金色光尘：借用夜里放星点的那一层，换成大小不一、边缘柔和的暖光，慢慢上下浮 */
+:root[data-time="dusk"] .blog::after {
+  opacity: 1;
+  background-image:
+    radial-gradient(7px 7px at 7% 22%, rgb(255 206 130 / .75), transparent),
+    radial-gradient(12px 12px at 19% 70%, rgb(255 180 140 / .4), transparent),
+    radial-gradient(5px 5px at 33% 12%, rgb(255 222 150 / .85), transparent),
+    radial-gradient(10px 10px at 46% 84%, rgb(255 196 120 / .45), transparent),
+    radial-gradient(6px 6px at 58% 40%, rgb(255 214 160 / .7), transparent),
+    radial-gradient(14px 14px at 71% 92%, rgb(250 170 150 / .35), transparent),
+    radial-gradient(6px 6px at 84% 18%, rgb(255 206 130 / .8), transparent),
+    radial-gradient(11px 11px at 93% 56%, rgb(255 190 140 / .42), transparent),
+    radial-gradient(5px 5px at 98% 86%, rgb(255 222 150 / .8), transparent);
+  animation: dusk-motes 9s ease-in-out infinite alternate;
+}
+@keyframes dusk-motes { from { transform: translateY(0); } to { transform: translateY(-16px); } }
+/* 卡片：被夕阳照着的暖白纸 */
+:root[data-time="dusk"] .post-card, :root[data-time="dusk"] .page-card, :root[data-time="dusk"] .side-card {
+  background: rgb(255 250 244 / .86); border-color: rgb(214 130 100 / .16);
+  box-shadow: 0 8px 26px rgb(170 90 70 / .1), inset 0 1px 0 rgb(255 255 255 / .9);
+}
+:root[data-time="dusk"] .post-card:hover { box-shadow: 0 14px 32px rgb(170 90 70 / .16), inset 0 1px 0 rgb(255 255 255 / .9); }
+:root[data-time="dusk"] .side-title svg, :root[data-time="dusk"] .read-more { color: var(--sea); }
+/* 侧栏悬停：竖线从珊瑚橘到金色，文字变珊瑚橘 */
+:root[data-time="dusk"] .side-recent li::before, :root[data-time="dusk"] .side-list li::before { background: linear-gradient(#e0704a, #f6c35c); }
+/* 原来垫浅蓝的地方换成蜜桃色 */
+:root[data-time="dusk"] :is(.post-end, .prose blockquote, .prose th, .post-nav a, .toc a.is-active) { background: rgb(252 214 190 / .32); }
+:root[data-time="dusk"] .prose code { background: rgb(252 214 190 / .5); }
+:root[data-time="dusk"] .prose pre { background: rgb(196 96 62 / .05); }
+:root[data-time="dusk"] .prose pre code { background: none; }
+:root[data-time="dusk"] .prose blockquote { border-left-color: rgb(196 96 62 / .4); }
+:root[data-time="dusk"] .prose h2::before { background: linear-gradient(#f6c35c, #e0704a); }
+:root[data-time="dusk"] :is(.code-copy, .copy-link, .float-bar-nav a, .float-bar-top, .profile-links a, .profile-qq, .search-results a, .post-nav a):is(:hover, .is-active) { background: rgb(252 210 184 / .5); }
+:root[data-time="dusk"] .copy-link { border-color: rgb(196 96 62 / .3); }
+:root[data-time="dusk"] .float-bar { box-shadow: 0 4px 18px rgb(170 90 70 / .1); }
+:root[data-time="dusk"] .search-results mark { background: rgb(246 195 92 / .45); }
+:root[data-time="dusk"] ::selection { background: rgb(244 168 128 / .4); }
+/* 页脚：蜜桃色和薰衣草色的晚霞海，向下淡回纸面 */
+:root[data-time="dusk"] #wave-back stop:last-child, :root[data-time="dusk"] #wave-front stop:last-child { stop-color: var(--paper); }
+:root[data-time="dusk"] .footer-wave path[stroke="#1f6fa8"] { stroke: #b0566c; }
+:root[data-time="dusk"] .blog::before, :root[data-time="dusk"] .blog::after {
+  -webkit-mask: linear-gradient(#000 calc(100% - 220px), transparent); mask: linear-gradient(#000 calc(100% - 220px), transparent);
+}
+
+/* ================= 白天的氛围 =================
+   像夏天上午的海边：右上角一团柠檬黄的阳光，往下慢慢透出海水的浅蓝（固定在窗口上，和黄昏那层交替淡入淡出）；
+   背景里有几块透过柠檬叶落下来的光斑，跟着风轻轻晃；卡片是阳光下干净的白纸 */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(70% 46% at 88% 0%, rgb(255 234 150 / .5), transparent 70%),
+    radial-gradient(50% 40% at 0% 100%, rgb(170 218 240 / .4), transparent 72%),
+    linear-gradient(rgb(255 246 206 / .3), rgb(255 246 206 / 0) 42%, rgb(204 234 246 / 0) 62%, rgb(196 230 246 / .38));
+  opacity: 0; transition: opacity var(--time-fade) ease-in-out;
+}
+:root:not([data-time="dusk"]):not([data-time="night"]) body::before { opacity: 1; }
+/* 叶隙光斑：借用夜里放星点的那一层，换成柔和的阳光圆斑和几粒水面反光 */
+:root:not([data-time="dusk"]):not([data-time="night"]) .blog::after {
+  opacity: 1;
+  background-image:
+    radial-gradient(22px 16px at 6% 18%, rgb(255 240 170 / .55), transparent),
+    radial-gradient(5px 5px at 15% 64%, rgb(255 255 255 / .95), transparent),
+    radial-gradient(28px 20px at 27% 90%, rgb(255 236 160 / .4), transparent),
+    radial-gradient(16px 12px at 38% 8%, rgb(255 244 190 / .55), transparent),
+    radial-gradient(4px 4px at 52% 46%, rgb(255 255 255 / .9), transparent),
+    radial-gradient(26px 18px at 66% 96%, rgb(255 238 166 / .4), transparent),
+    radial-gradient(18px 13px at 80% 14%, rgb(255 242 180 / .55), transparent),
+    radial-gradient(5px 5px at 90% 58%, rgb(255 255 255 / .9), transparent),
+    radial-gradient(24px 17px at 97% 80%, rgb(255 236 160 / .45), transparent);
+  animation: day-dapple 11s ease-in-out infinite alternate;
+}
+@keyframes day-dapple {
+  0% { transform: translate(0, 0); opacity: 1; }
+  50% { opacity: .7; }
+  100% { transform: translate(10px, -8px); opacity: 1; }
+}
+/* 卡片：阳光下的白纸，顶上一道细细的高光 */
+:root:not([data-time="dusk"]):not([data-time="night"]) :is(.post-card, .page-card, .side-card) {
+  background: rgb(255 254 250 / .9); border-color: rgb(31 111 168 / .08);
+  box-shadow: 0 8px 26px rgb(29 75 107 / .08), inset 0 1px 0 rgb(255 255 255 / .95);
+}
+/* 页脚的浪向下淡回纸面；博客区背后的晕染和光斑在下缘渐隐（三个时间都一样） */
+:root:not([data-time="dusk"]):not([data-time="night"]) :is(#wave-back, #wave-front) stop:last-child { stop-color: var(--paper); }
+.blog::before, .blog::after {
   -webkit-mask: linear-gradient(#000 calc(100% - 220px), transparent); mask: linear-gradient(#000 calc(100% - 220px), transparent);
 }

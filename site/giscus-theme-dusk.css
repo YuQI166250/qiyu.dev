@@ -1,0 +1,30 @@
+/* giscus 评论区的黄昏配色：暖白纸、暮色墨紫和珊瑚橘。黄昏时由 blog.js 换上。 */
+@import url("https://giscus.app/themes/light.css");
+
+main {
+  --color-canvas-default: #fffaf4;
+  --color-canvas-subtle: #fbefe4;
+  --color-canvas-inset: #f9ebdf;
+  --color-canvas-overlay: #fffaf4;
+  --color-fg-default: #3a3a5c;
+  --color-fg-muted: #7c6f86;
+  --color-fg-subtle: #a0929f;
+  --color-border-default: #ecd9cc;
+  --color-border-muted: #f2e3d8;
+  --color-accent-fg: #c4603e;
+  --color-accent-emphasis: #c4603e;
+  --color-accent-muted: rgb(196 96 62 / .4);
+  --color-accent-subtle: #fbe5d8;
+  --color-btn-text: #3a3a5c;
+  --color-btn-bg: #fbefe4;
+  --color-btn-hover-bg: #f6e2d4;
+  --color-btn-primary-text: #fff;
+  --color-btn-primary-bg: #c4603e;
+  --color-btn-primary-hover-bg: #b05434;
+  --color-btn-primary-selected-bg: #9c4a2e;
+  --color-btn-primary-disabled-bg: #e3a991;
+  --color-segmented-control-bg: #f6e2d4;
+  --color-segmented-control-button-bg: #fffaf4;
+  --color-social-reaction-bg-hover: #f6e2d4;
+  --color-social-reaction-bg-reacted-hover: #fbd9c6;
+}
