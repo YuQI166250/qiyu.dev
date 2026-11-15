@@ -37,17 +37,19 @@
     --wash-sun var(--time-fade) ease-in-out, --wash-sea var(--time-fade) ease-in-out, --wash-leaf var(--time-fade) ease-in-out,
     --wave-back var(--time-fade) ease-in-out, --wave-front var(--time-fade) ease-in-out, --wash-night var(--time-fade) ease-in-out;
 }
-/* 黄昏：纸面带一点杏色，晕染换成杏黄、薰衣草紫和淡玫瑰；夜晚：纸面像被月光照着，微微偏冷，
-   手账后的阳光黄换成月白，海蓝晕染更深一点。都还是浅色纸面，不做深色模式。 */
+/* 黄昏：纸面带一点杏色，晕染换成杏黄、薰衣草紫和淡玫瑰；夜晚：深色模式，纸面换成和夜景天空同色系的深靛蓝，
+   文字换成月白，晕染变成很淡的蓝紫光，像夜里的海面（具体的卡片、代码块等见文末「夜晚的深色模式」） */
 :root[data-time="dusk"] {
   --paper: #fcf3e8; --ink: #27466a; --muted: #69708a;
   --wash-sun: rgb(253 214 180 / .72); --wash-sea: rgb(216 208 238 / .62); --wash-leaf: rgb(248 216 206 / .55);
   --wave-back: #dcd8ef; --wave-front: #c8cbea;
 }
 :root[data-time="night"] {
-  --paper: #eef1f9; --ink: #1c3150; --muted: #56647e;
-  --wash-sun: rgb(255 232 178 / .62); --wash-sea: rgb(140 168 236 / .55); --wash-leaf: rgb(196 182 240 / .55);
-  --wave-back: #c3cce6; --wave-front: #a7b6dc;
+  --paper: #111a33; --ink: #e4e9f5; --muted: #a3b0cc;
+  --sea: #8db8ef; --line: rgb(200 215 255 / .1);
+  --wash-sun: rgb(255 220 150 / .09); --wash-sea: rgb(100 132 240 / .2); --wash-leaf: rgb(160 130 240 / .16);
+  --wave-back: #22325c; --wave-front: #2c4277;
+  color-scheme: dark;
   --wash-night: rgb(150 166 214 / .48);
 }
 /* 首屏直接停在那个时间，不播放过渡 */
@@ -1082,24 +1084,25 @@ figure { margin: 0; }
 .blog::after {
   content: ""; position: absolute; z-index: -1; inset: -60px -12vw -40px; pointer-events: none;
   background-image:
-    radial-gradient(2.6px 2.6px at 6% 14%, rgb(120 146 220 / .9), transparent),
-    radial-gradient(2px 2px at 18% 62%, rgb(150 132 220 / .8), transparent),
-    radial-gradient(3.2px 3.2px at 31% 8%, rgb(232 196 120 / .9), transparent),
-    radial-gradient(2px 2px at 44% 78%, rgb(120 146 220 / .8), transparent),
-    radial-gradient(2.6px 2.6px at 57% 34%, rgb(150 132 220 / .7), transparent),
-    radial-gradient(2px 2px at 69% 88%, rgb(232 196 120 / .8), transparent),
-    radial-gradient(3.2px 3.2px at 82% 12%, rgb(120 146 220 / .9), transparent),
-    radial-gradient(2px 2px at 91% 52%, rgb(150 132 220 / .8), transparent),
-    radial-gradient(2.6px 2.6px at 97% 82%, rgb(120 146 220 / .8), transparent);
+    radial-gradient(2.6px 2.6px at 6% 14%, rgb(200 214 255 / .9), transparent),
+    radial-gradient(2px 2px at 18% 62%, rgb(214 200 255 / .75), transparent),
+    radial-gradient(3.2px 3.2px at 31% 8%, rgb(255 233 168 / .9), transparent),
+    radial-gradient(2px 2px at 44% 78%, rgb(200 214 255 / .75), transparent),
+    radial-gradient(2.6px 2.6px at 57% 34%, rgb(214 200 255 / .7), transparent),
+    radial-gradient(2px 2px at 69% 88%, rgb(255 233 168 / .8), transparent),
+    radial-gradient(3.2px 3.2px at 82% 12%, rgb(200 214 255 / .9), transparent),
+    radial-gradient(2px 2px at 91% 52%, rgb(214 200 255 / .75), transparent),
+    radial-gradient(2.6px 2.6px at 97% 82%, rgb(200 214 255 / .8), transparent);
   opacity: 0; transition: opacity var(--time-fade) ease-in-out;
 }
 :root[data-time="night"] .blog::after { opacity: 1; }
 :root[data-time="night"] .blog::before { opacity: 1; }
 :root[data-time="night"] .post-card, :root[data-time="night"] .page-card, :root[data-time="night"] .side-card {
-  background: rgb(250 251 255 / .92); border-color: rgb(140 160 230 / .22);
-  box-shadow: 0 8px 26px rgb(70 90 170 / .12), inset 0 1px 0 rgb(255 255 255 / .9);
+  background: rgb(26 37 70 / .8); border-color: rgb(170 190 255 / .12);
+  box-shadow: 0 10px 30px rgb(3 8 24 / .35), inset 0 1px 0 rgb(255 255 255 / .06);
 }
-:root[data-time="night"] .side-title svg, :root[data-time="night"] .read-more { color: #4a62c4; }
+:root[data-time="night"] .post-card:hover { box-shadow: 0 16px 36px rgb(3 8 24 / .45), inset 0 1px 0 rgb(255 255 255 / .08); }
+:root[data-time="night"] .side-title svg, :root[data-time="night"] .read-more { color: #a9bfff; }
 /* 头像卡片的夜晚横幅提亮一点 */
 
 /* 回到顶部按钮跟着时间换成清亮的渐变：黄昏珊瑚到杏色，夜晚长春花蓝到月光蓝 */
@@ -1213,12 +1216,55 @@ figure { margin: 0; }
 .side-recent li a:focus-visible, .side-list li a:focus-visible { outline: none; }
 /* 夜晚：月光色 */
 :root[data-time="night"] .side-recent li::after, :root[data-time="night"] .side-list li::after {
-  background: linear-gradient(90deg, rgb(170 186 246 / .45), rgb(196 182 240 / .2) 55%, rgb(196 182 240 / 0));
+  background: linear-gradient(90deg, rgb(140 165 255 / .22), rgb(170 150 245 / .1) 55%, rgb(170 150 245 / 0));
 }
-:root[data-time="night"] .side-recent li::before, :root[data-time="night"] .side-list li::before { background: linear-gradient(#6f84e6, #ffe9a8); }
+:root[data-time="night"] .side-recent li::before, :root[data-time="night"] .side-list li::before { background: linear-gradient(#8fa3ff, #ffe9a8); }
 :root[data-time="night"] .side-recent li:hover a, :root[data-time="night"] .side-list li:hover a,
-:root[data-time="night"] .side-recent li a::after, :root[data-time="night"] .side-list li:hover span { color: #4a62c4; }
+:root[data-time="night"] .side-recent li a::after, :root[data-time="night"] .side-list li:hover span { color: #c2d0ff; }
 /* 黄昏：杏色晕染 */
 :root[data-time="dusk"] .side-recent li::after, :root[data-time="dusk"] .side-list li::after {
   background: linear-gradient(90deg, rgb(253 222 196 / .7), rgb(253 222 196 / .3) 55%, rgb(253 222 196 / 0));
+}
+
+/* ================= 夜晚的深色模式 =================
+   海景下面的部分（文章、侧栏、顶栏、页脚）换成深靛蓝底、月白字；颜色变量见开头的 :root[data-time="night"]。
+   这里只处理写死了浅色的地方：浅蓝底色、细线、代码块、搜索框和结果、提示气泡。
+   海景里的猫的话、漂流瓶的信、明信片背面还是浅色纸，字仍用深墨色 */
+:root[data-time="night"] .cat-says, :root[data-time="night"] .bottle-letter, :root[data-time="night"] .postcard-back {
+  --ink: #1c3150; --muted: #56647e; --sea: #1f6fa8;
+}
+:root[data-time="night"] .bottle-letter::backdrop { background: rgb(8 14 32 / .55); }
+/* 细线 */
+:root[data-time="night"] :is(.post-card-foot, .post-header, .post-nav, .archive-list li, .prose th, .prose td, .page-cloud a, .prose pre, .search-results) { border-color: var(--line); }
+:root[data-time="night"] .prose hr { border-top-color: var(--line); }
+:root[data-time="night"] .toc a { border-left-color: var(--line); }
+:root[data-time="night"] .toc a.is-active { border-left-color: var(--sea); }
+/* 原来垫浅蓝的地方：换成一层淡淡的月光蓝 */
+:root[data-time="night"] :is(.post-end, .prose blockquote, .prose th, .post-nav a, .toc a.is-active) { background: rgb(140 170 255 / .09); }
+:root[data-time="night"] .prose code { background: rgb(140 170 255 / .14); }
+:root[data-time="night"] .prose pre { background: rgb(4 9 26 / .35); }
+:root[data-time="night"] .prose pre code { background: none; }
+:root[data-time="night"] .prose blockquote { border-left-color: rgb(141 184 239 / .45); }
+:root[data-time="night"] :is(.code-copy, .copy-link, .float-bar-nav a, .float-bar-top, .profile-links a, .profile-qq, .search-results a, .post-nav a):is(:hover, .is-active) { background: rgb(140 170 255 / .16); }
+:root[data-time="night"] .copy-link { border-color: rgb(141 184 239 / .35); }
+/* 顶栏和搜索 */
+:root[data-time="night"] .float-bar { box-shadow: 0 4px 18px rgb(0 0 0 / .3); }
+:root[data-time="night"] .float-bar .float-bar-search input { background: rgb(255 255 255 / .07); border-color: var(--line); color: var(--ink); }
+:root[data-time="night"] .float-bar .float-bar-search input::placeholder { color: var(--muted); }
+:root[data-time="night"] .float-bar .float-bar-search > svg { stroke: var(--muted); }
+:root[data-time="night"] .search-results { background: #1a2546; box-shadow: 0 18px 40px rgb(0 0 0 / .4); color: var(--ink); }
+:root[data-time="night"] .search-results span, :root[data-time="night"] .search-results p { color: var(--muted); }
+:root[data-time="night"] .search-results mark { background: rgb(243 198 63 / .32); }
+/* 头像外圈、QQ 提示 */
+:root[data-time="night"] .profile-avatar { border-color: #263760; box-shadow: 0 6px 16px rgb(0 0 0 / .35); }
+:root[data-time="night"] .qq-toast { color: var(--paper); }
+/* 图片在暗处稍微压一点亮度，不刺眼 */
+:root[data-time="night"] :is(.post-cover img, .post-hero, .prose img) { filter: brightness(.9); }
+/* 页脚的浪向下淡回深色纸面 */
+:root[data-time="night"] #wave-back stop:last-child, :root[data-time="night"] #wave-front stop:last-child { stop-color: var(--paper); }
+:root[data-time="night"] .footer-wave-front path:nth-of-type(2) { stroke-opacity: .45; }
+:root[data-time="night"] .footer-wave path[stroke="#1f6fa8"] { stroke: #8db8ef; }
+/* 博客区背后的晕染和星点在下缘渐隐，不在页脚上方留下一道直边 */
+:root[data-time="night"] .blog::before, :root[data-time="night"] .blog::after {
+  -webkit-mask: linear-gradient(#000 calc(100% - 220px), transparent); mask: linear-gradient(#000 calc(100% - 220px), transparent);
 }

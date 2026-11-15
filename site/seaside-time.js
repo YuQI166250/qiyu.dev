@@ -19,7 +19,7 @@
     dusk: '水彩画：黄昏时分，柠檬藤架下的石砌露台，一只猫趴在矮墙上，天边的云被晚霞染成橘粉色，海湾里有帆船，山坡上立着白色灯塔。',
     night: '水彩画：星空下的海湾，柠檬藤架下的石砌露台，一只猫趴在矮墙上，海面泛着月色，灯塔和山坡上的小镇亮起了灯。',
   };
-  const THEME = { day: '#fbf7ec', dusk: '#fcf3e8', night: '#eef1f9' };
+  const THEME = { day: '#fbf7ec', dusk: '#fcf3e8', night: '#111a33' };
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   const buttons = [...control.querySelectorAll('button[data-time]')];
   const autoButton = control.querySelector('button[data-mode="auto"]');

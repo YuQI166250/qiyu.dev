@@ -167,6 +167,17 @@
   // ---------- 评论：giscus，滚到评论区附近才加载 ----------
   const comments = document.querySelector('.comments');
   if (comments) {
+    // 自定义配色要从 https 加载（giscus 的窗口是 https）；本地 http 预览时用官方主题。夜晚换深色
+    const giscusTheme = () => {
+      const night = document.documentElement.dataset.time === 'night';
+      if (location.protocol !== 'https:') return night ? 'dark' : 'light';
+      return new URL(night ? '/giscus-theme-night.css' : '/giscus-theme.css', location.origin).href;
+    };
+    // 切换海边时间时，已经加载好的评论区跟着换配色
+    new MutationObserver(() => {
+      const frame = comments.querySelector('iframe.giscus-frame');
+      if (frame) frame.contentWindow.postMessage({ giscus: { setConfig: { theme: giscusTheme() } } }, 'https://giscus.app');
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-time'] });
     const load = () => {
       const d = comments.dataset;
       const script = document.createElement('script');
@@ -177,8 +188,7 @@
         repo: d.repo, 'repo-id': d.repoId, category: d.category, 'category-id': d.categoryId,
         mapping: 'pathname', strict: '1', 'reactions-enabled': '1', 'emit-metadata': '0',
         'input-position': 'top', lang: 'zh-CN', loading: 'lazy',
-        // 自定义配色要从 https 加载（giscus 的窗口是 https）；本地 http 预览时用官方浅色主题
-        theme: location.protocol === 'https:' ? new URL('/giscus-theme.css', location.origin).href : 'light',
+        theme: giscusTheme(),
       }).forEach(([key, value]) => script.setAttribute(`data-${key}`, value));
       comments.querySelector('.giscus').appendChild(script);
     };

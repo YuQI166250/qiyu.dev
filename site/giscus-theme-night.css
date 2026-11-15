@@ -1,0 +1,31 @@
+/* giscus 评论区的夜晚配色：在官方深色主题上换成网站夜晚的深靛蓝、月白和月光蓝。
+   夜晚时由 blog.js 换上（切换时间时也会跟着换）。 */
+@import url("https://giscus.app/themes/dark.css");
+
+main {
+  --color-canvas-default: #1a2546;
+  --color-canvas-subtle: #16203d;
+  --color-canvas-inset: #131c36;
+  --color-canvas-overlay: #1a2546;
+  --color-fg-default: #e4e9f5;
+  --color-fg-muted: #a3b0cc;
+  --color-fg-subtle: #7f8cab;
+  --color-border-default: #2c3a63;
+  --color-border-muted: #243156;
+  --color-accent-fg: #8db8ef;
+  --color-accent-emphasis: #4f7fd0;
+  --color-accent-muted: rgb(141 184 239 / .4);
+  --color-accent-subtle: rgb(141 184 239 / .12);
+  --color-btn-text: #e4e9f5;
+  --color-btn-bg: #22305a;
+  --color-btn-hover-bg: #2a3a6a;
+  --color-btn-primary-text: #fff;
+  --color-btn-primary-bg: #4f7fd0;
+  --color-btn-primary-hover-bg: #5b8ce0;
+  --color-btn-primary-selected-bg: #4572c0;
+  --color-btn-primary-disabled-bg: #34507e;
+  --color-segmented-control-bg: #16203d;
+  --color-segmented-control-button-bg: #22305a;
+  --color-social-reaction-bg-hover: #22305a;
+  --color-social-reaction-bg-reacted-hover: #2a3a6a;
+}
