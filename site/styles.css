@@ -1508,3 +1508,18 @@ body::before {
   .footer-rights > span { display: none; }
   .footer-inner { padding-right: 64px; }
 }
+
+/* 「听听海」换页后等点按：按钮的字轻轻一明一暗，下方浮出一行小提示，点一下页面就消失 */
+.header-tools { position: relative; }
+.sound-toggle[data-state="waiting"] { color: var(--sea); }
+.sound-toggle[data-state="waiting"] .sound-label { animation: sound-loading 1.4s ease-in-out infinite alternate; }
+.sound-hint {
+  position: absolute; right: 0; top: calc(100% + 2px); z-index: 7;
+  padding: 4px 12px; border-radius: 999px; white-space: nowrap; pointer-events: none;
+  background: color-mix(in srgb, var(--paper) 55%, rgb(255 255 255 / .7)); color: var(--ink);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgb(29 75 107 / .14); font-size: 13px; letter-spacing: .06em;
+  opacity: 0; transform: translateY(-4px); transition: opacity .4s ease, transform .4s ease;
+}
+.sound-hint.is-shown { opacity: 1; transform: none; }
+:root[data-time="night"] .sound-hint { background: rgb(16 26 54 / .6); color: #e4e9f5; box-shadow: 0 4px 14px rgb(0 0 0 / .25); }

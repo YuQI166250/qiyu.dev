@@ -5,6 +5,10 @@
 // 声音跟着海边的时间变（读 seaside-time.js 的权重）：黄昏海鸥变少、海风柔一些；夜里只剩轻柔的浪，
 // 不再有海鸥，海风只留低沉的部分——海风录音里夹着零星的小鸟（2.5–8kHz），夜里用低通滤掉。
 // 换时间不会打开声音；正在播放时各层用一两秒慢慢滑过去，不会突然切断。
+// 换页时记住开关（只在这次浏览里）：到了新页面先试着直接接上；浏览器不允许自动出声时，
+// 按钮旁提示「点一下页面，继续听海」，点按页面任意处或按键后再淡入。
+// 离开页面时记下每层声音放到了哪里；新页面按「那个位置 + 中间经过的时间」接着放，淡入也很短，
+// 听起来是同一片海一直在响，而不是换了一段重新开始。
 (() => {
   'use strict';
 
@@ -25,7 +29,7 @@
     gulls: 0.22,
     gullGap: [12, 32], // 上一组叫完之后再等这么久
   };
-  const FADE_IN = 2.5, FADE_OUT = 1.2;
+  const FADE_IN = 2.5, FADE_OUT = 1.2, FADE_RESUME = 0.6; // 换页接着放时只做很短的淡入
 
   // 三个时间各自的声音：音量是乘在上面 mix 上的倍数，亮度是低通滤波的截止频率（Hz，越低越闷），
   // gullRate 是海鸥出现的频繁程度（1 = 白天的间隔，0 = 不再叫）。过渡中按权重混合，频率按对数混合。
@@ -41,17 +45,48 @@
   let ctx = null, master = null, buses = null, tones = null, layers = null, echo = null, buffers = null, loading = null;
   let wanted = false, started = false;
   let timers = [], suspendTimer = 0, lastGull = -1, retryArmed = false;
+  const KEY = 'seaside-sound';
+  const remember = (on) => { try { if (on) sessionStorage.setItem(KEY, '1'); else sessionStorage.removeItem(KEY); } catch (err) { /* 无痕模式等：不记 */ } };
+  const remembered = () => { try { return sessionStorage.getItem(KEY) === '1'; } catch (err) { return false; } };
+  // 播放位置：每层循环的起点偏移、速度和长度，加上开始时的 ctx 时间，随时能算出现在放到哪
+  const POS_KEY = 'seaside-sound-pos';
+  let clock = null, savedPos = null, quickFade = false;
+  const wrap = (x, len) => ((x % len) + len) % len;
+  function readPos() {
+    try {
+      const v = JSON.parse(sessionStorage.getItem(POS_KEY) || 'null');
+      return v && Date.now() - v.at < 30 * 60 * 1000 ? v : null; // 半小时以前的就不接了
+    } catch (err) { return null; }
+  }
+  function savePos() {
+    if (!clock || !layers || !ctx) return;
+    const now = ctx.currentTime, at = (k) => wrap(clock[k].off + (now - clock.t0) * clock[k].rate, clock[k].len);
+    const v = {
+      at: Date.now(), near: at('near'), far: at('far'), wind: at('wind'),
+      gain: { near: layers.nearGain.gain.value, far: layers.farGain.gain.value, wind: layers.windGain.gain.value },
+    };
+    try { sessionStorage.setItem(POS_KEY, JSON.stringify(v)); } catch (err) { /* 不记也没关系 */ }
+  }
 
   const rand = (a, b) => a + Math.random() * (b - a);
 
   function setUi(state) {
-    // state: off | loading | on | error
+    // state: off | loading | waiting（换页后等一次点按） | on | error
     button.dataset.state = state;
     label.textContent = state === 'error' ? '暂时听不到' : '听听海';
-    button.setAttribute('aria-pressed', String(state === 'on' || state === 'loading'));
+    button.setAttribute('aria-pressed', String(state === 'on' || state === 'loading' || state === 'waiting'));
     button.setAttribute('aria-busy', String(state === 'loading'));
-    button.title = state === 'on' ? '关掉海边的声音' : state === 'error' ? '海的声音暂时没能载入，稍后再试' : '打开海边的声音';
+    button.title = state === 'on' ? '关掉海边的声音' : state === 'error' ? '海的声音暂时没能载入，稍后再试'
+      : state === 'waiting' ? '点一下页面任意处，继续听海' : '打开海边的声音';
+    if (state !== 'waiting') hint.classList.remove('is-shown');
   }
+
+  // 换页后等点按时的小提示，挂在按钮下方
+  const hint = document.createElement('span');
+  hint.className = 'sound-hint';
+  hint.setAttribute('aria-hidden', 'true');
+  hint.textContent = '点一下页面，继续听海';
+  button.after(hint);
 
   async function loadBuffer(name) {
     // 首选 Opus（体积小）；个别浏览器解不了时退回 AAC
@@ -140,21 +175,36 @@
   function startLayers() {
     started = true;
     const { waves, wind } = buffers;
+    // 起点：换页接着放时按上一页离开时的位置 + 经过的时间；否则随机
+    const gone = savedPos ? (Date.now() - savedPos.at) / 1000 : 0;
+    const from = (k, rate, len) => (savedPos ? wrap(savedPos[k] + gone * rate, len) : rand(0, len));
+    clock = {
+      t0: ctx.currentTime,
+      near: { off: from('near', 1, LOOPS.waves), rate: 1, len: LOOPS.waves },
+      far: { off: from('far', 0.91, LOOPS.waves), rate: 0.91, len: LOOPS.waves },
+      wind: { off: from('wind', 1, LOOPS.wind), rate: 1, len: LOOPS.wind },
+    };
     // 近处的浪：原速
     const nearGain = ctx.createGain(), nearPan = panner(-0.12);
-    loop(waves, LOOPS.waves, 1, rand(0, LOOPS.waves)).connect(nearGain);
+    loop(waves, LOOPS.waves, 1, clock.near.off).connect(nearGain);
     nearGain.connect(nearPan).connect(buses.waves);
     // 远一点的浪：稍慢、更闷、更轻，和近处错开；两层周期不同，组合起来很久都不会重复
     const farGain = ctx.createGain(), farPan = panner(0.35), farTone = ctx.createBiquadFilter();
     farTone.type = 'lowpass'; farTone.frequency.value = 1300;
     farGain.gain.value = 0.5;
-    loop(waves, LOOPS.waves, 0.91, rand(0, LOOPS.waves)).connect(farTone);
+    loop(waves, LOOPS.waves, 0.91, clock.far.off).connect(farTone);
     farTone.connect(farGain).connect(farPan).connect(buses.waves);
     // 海风
     const windGain = ctx.createGain(), windPan = panner(0);
     windGain.gain.value = 0.8;
-    loop(wind, LOOPS.wind, 1, rand(0, LOOPS.wind)).connect(windGain);
+    loop(wind, LOOPS.wind, 1, clock.wind.off).connect(windGain);
     windGain.connect(windPan).connect(buses.wind);
+    // 起伏的音量也从上一页离开时的样子接着漂，不会一换页强弱就跳一下
+    if (savedPos && savedPos.gain) {
+      nearGain.gain.value = savedPos.gain.near;
+      farGain.gain.value = savedPos.gain.far;
+      windGain.gain.value = savedPos.gain.wind;
+    }
 
     layers = { nearGain, farGain, windGain, windPan };
   }
@@ -256,7 +306,8 @@
     if (ctx.state !== 'running') { armRetry(); return; }
     if (!started) startLayers();
     animate();
-    fadeTo(1, FADE_IN);
+    fadeTo(1, quickFade ? FADE_RESUME : FADE_IN);
+    quickFade = false;
     setUi('on');
   }
 
@@ -290,44 +341,87 @@
     try { if (navigator.audioSession) navigator.audioSession.type = type; } catch (err) { /* 忽略 */ }
   }
 
+  function ensureContext() {
+    if (ctx) return true;
+    try {
+      ctx = new AC({ latencyHint: 'playback' });
+    } catch (err) {
+      ctx = null;
+      fail(err);
+      return false;
+    }
+    buildGraph();
+    ctx.addEventListener('statechange', () => {
+      // iOS 来电、Siri 等会把声音“打断”；恢复后如果用户还想听，就接着淡入
+      if (ctx.state === 'running') return;
+      stopTimers();
+      if (wanted && !document.hidden && buffers && button.dataset.state !== 'waiting') armRetry();
+    });
+    return true;
+  }
+
+  async function loadAll() {
+    if (buffers) return true;
+    loading = loading || Promise.all(['sea-waves', 'sea-wind', 'sea-gulls'].map(loadBuffer))
+      .then(([waves, wind, gulls]) => { buffers = { waves, wind, gulls }; });
+    try {
+      await loading;
+      return true;
+    } catch (err) {
+      loading = null;
+      fail(err);
+      return false;
+    }
+  }
+
   async function turnOn() {
     wanted = true;
+    remember(true);
     setSession('playback');
-    if (!ctx) {
-      try {
-        ctx = new AC({ latencyHint: 'playback' });
-      } catch (err) {
-        ctx = null;
-        return fail(err);
-      }
-      buildGraph();
-      ctx.addEventListener('statechange', () => {
-        // iOS 来电、Siri 等会把声音“打断”；恢复后如果用户还想听，就接着淡入
-        if (ctx.state === 'running') return;
-        stopTimers();
-        if (wanted && !document.hidden && buffers) armRetry();
-      });
-    }
+    if (!ensureContext()) return;
     followTime(); // 打开时直接按当前时间的配比，不从白天滑过去
     // 必须在点按事件里同步调用 resume，iOS 才会放行
     const resumed = ctx.resume();
-    if (!buffers) {
-      setUi('loading');
-      loading = loading || Promise.all(['sea-waves', 'sea-wind', 'sea-gulls'].map(loadBuffer))
-        .then(([waves, wind, gulls]) => { buffers = { waves, wind, gulls }; });
-      try {
-        await loading;
-      } catch (err) {
-        loading = null;
-        return fail(err);
-      }
-    }
+    if (!buffers) setUi('loading');
+    if (!(await loadAll())) return;
     try { await resumed; } catch (err) { /* play() 会再试 */ }
     play();
   }
 
+  // 换页后接着听：先载好声音并试着直接恢复；浏览器不放行时，等页面上第一次点按或按键
+  let skipClick = false;
+  async function resumeRemembered() {
+    wanted = true;
+    savedPos = readPos();
+    quickFade = !!savedPos;
+    setUi('waiting');
+    setSession('playback');
+    if (!ensureContext()) return;
+    followTime();
+    if (!(await loadAll()) || !wanted) return;
+    try { await Promise.race([ctx.resume(), new Promise((r) => setTimeout(r, 400))]); } catch (err) { /* 下面看状态 */ }
+    if (!wanted) return;
+    if (ctx.state === 'running') { play(); return; }
+    hint.classList.add('is-shown');
+    const events = ['pointerdown', 'pointerup', 'touchend', 'keydown', 'click'];
+    const done = () => events.forEach((t) => document.removeEventListener(t, attempt, true));
+    function attempt(e) {
+      if (!wanted) { done(); return; }
+      // 点的正好是「听听海」按钮：这一下用来接着播放，不要再被当成「关掉」
+      if (e.target instanceof Element && e.target.closest('.sound-toggle')) skipClick = true;
+      ctx.resume().then(() => {
+        if (ctx.state !== 'running' || !wanted) return;
+        done();
+        play();
+      }, () => {});
+    }
+    events.forEach((t) => document.addEventListener(t, attempt, true));
+  }
+
   function turnOff() {
     wanted = false;
+    remember(false);
+    try { sessionStorage.removeItem(POS_KEY); } catch (err) { /* 忽略 */ }
     setUi('off');
     pause(FADE_OUT);
     setTimeout(() => { if (!wanted) setSession('auto'); }, FADE_OUT * 1000 + 200);
@@ -336,6 +430,7 @@
   function fail(err) {
     console.warn('海边声景没能开启：', err);
     wanted = false;
+    remember(false);
     setSession('auto');
     if (ctx && master) pause(0.2);
     setUi('error');
@@ -343,6 +438,7 @@
   }
 
   button.addEventListener('click', () => {
+    if (skipClick) { skipClick = false; return; } // 这一下已经用来接着播放了
     if (wanted) turnOff(); else turnOn();
   });
 
@@ -351,9 +447,13 @@
     if (document.hidden) pause(0.4);
     else if (wanted) play();
   });
-  window.addEventListener('pagehide', () => { if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); });
+  window.addEventListener('pagehide', () => {
+    if (wanted) savePos(); // 换页或关掉前记下放到哪，下一页接着放
+    if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {});
+  });
   window.addEventListener('pageshow', (e) => { if (e.persisted && wanted && ctx) play(); });
 
   setUi('off');
   button.hidden = false;
+  if (remembered()) resumeRemembered();
 })();
