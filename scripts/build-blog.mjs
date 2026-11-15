@@ -29,7 +29,8 @@ const SITE = path.join(ROOT, 'site');
 const CONTENT = path.join(ROOT, 'content');
 const ORIGIN = 'https://qiyu.dev';
 const AUTHOR = 'QIYU';
-const SITE_NAME = 'QIYU的海边小世界'; // 页面标题、RSS 用的网站名
+const SITE_NAME = 'QIYU的海边小世界'; // RSS 用的网站名
+const TAB_NAME = 'QIYU'; // 浏览器标签上的名字：「文章标题 · QIYU」
 const HOME_LIMIT = 10; // 首页最多列几篇，更早的去归档页看
 // 评论：giscus，评论存在仓库的 GitHub Discussions 里，访客用 GitHub 账号登录后留言。
 // repoId、categoryId 在 https://giscus.app 填入仓库名后获得；两个都填了才显示评论区。
@@ -372,13 +373,13 @@ ${GISCUS.repoId && GISCUS.categoryId ? `<section class="page-card comments" id="
   <p class="comments-note">用 GitHub 账号登录后就能留言。</p>
   <div class="giscus"></div>
 </section>` : ''}`;
-  await write(`posts/${p.slug}/index.html`, page({ title: `${p.title} · ${SITE_NAME}`, description: p.summary, nav: '', main, side: tocCard(p.toc) || side, bodyClass: 'is-post' }));
+  await write(`posts/${p.slug}/index.html`, page({ title: `${p.title} · ${TAB_NAME}`, description: p.summary, nav: '', main, side: tocCard(p.toc) || side, bodyClass: 'is-post' }));
 }
 
 // 归档：按年份
 const years = countBy(posts.map((p) => ({ ...p, year: p.date.slice(0, 4) })), 'year').sort((a, b) => b[0].localeCompare(a[0]));
 await write('archives/index.html', page({
-  title: `归档 · ${SITE_NAME}`, description: `${AUTHOR} 的全部文章`, nav: '/archives/', side,
+  title: `归档 · ${TAB_NAME}`, description: `${AUTHOR} 的全部文章`, nav: '/archives/', side,
   main: `<div class="page-card">
   <h1 class="page-title">归档</h1>
   <p class="page-sub">一共 ${posts.length} 篇，慢慢写。</p>
@@ -389,7 +390,7 @@ await write('archives/index.html', page({
 
 // 分类、标签：一页列出全部，用锚点跳到对应的那一组
 const groupPage = (kind, label, prefix, groups) => page({
-  title: `${label} · ${SITE_NAME}`, description: `${AUTHOR} 的文章${label}`, nav: `/${kind}/`, side,
+  title: `${label} · ${TAB_NAME}`, description: `${AUTHOR} 的文章${label}`, nav: `/${kind}/`, side,
   main: `<div class="page-card">
   <h1 class="page-title">${label}</h1>
   <p class="tag-cloud page-cloud">${groups.map(([g, ps]) => `<a href="#${anchor(prefix, g)}" data-weight="${Math.min(3, ps.length)}">${prefix === 't' ? '#' : ''}${esc(g)}<span>${ps.length}</span></a>`).join('')}</p>
@@ -407,7 +408,7 @@ const about = await readFile(path.join(CONTENT, 'about.md'), 'utf8').catch(() =>
 if (about) {
   const { meta, body } = frontMatter(about);
   await write('about/index.html', page({
-    title: `${meta.title || '关于'} · ${SITE_NAME}`, description: meta.summary || `关于 ${AUTHOR}`, nav: '/about/', side,
+    title: `${meta.title || '关于'} · ${TAB_NAME}`, description: meta.summary || `关于 ${AUTHOR}`, nav: '/about/', side,
     main: `<article class="page-card post">
   <header class="post-header"><h1 class="post-title">${esc(meta.title || '关于')}</h1></header>
   <div class="prose">
@@ -419,7 +420,7 @@ ${markdown(body).html}
 
 // 404：GitHub Pages 找不到页面时显示
 await write('404.html', page({
-  title: `这里只有海浪 · ${SITE_NAME}`, description: '页面不存在', nav: '', side,
+  title: `这里只有海浪 · ${TAB_NAME}`, description: '页面不存在', nav: '', side,
   main: `<div class="page-card empty-note">
   <h1 class="page-title">这里只有海浪</h1>
   <p>你要找的页面可能被浪卷走了。<a href="/">回到海边</a>，或者在上面搜一搜。</p>
