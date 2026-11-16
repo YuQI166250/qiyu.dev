@@ -19,21 +19,17 @@
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="preload" as="image" href="assets/hero/hero-seaside-desktop-1200.webp"
-        imagesrcset="assets/hero/hero-seaside-desktop-1200.webp 1200w, assets/hero/hero-seaside-desktop.webp 1774w"
-        imagesizes="100vw" media="(min-width: 641px) and (min-aspect-ratio: 3/4)" fetchpriority="high">
-  <link rel="preload" as="image" href="assets/hero/hero-seaside-mobile-crop.webp" media="(max-width: 640px), (max-aspect-ratio: 3/4)" fetchpriority="high">
   <link rel="stylesheet" href="styles.css">
   <link rel="preload" href="/assets/fonts/title-font.woff" as="font" type="font/woff" crossorigin>
   <link rel="alternate" type="application/rss+xml" title="QIYU" href="/feed.xml">
   <!-- 同步执行：先按本地时间定好首屏是白天、黄昏还是夜晚，避免先闪一下白天 -->
   <script src="seaside-clock.js"></script>
   <script src="hero-water.js" defer></script>
-  <script src="postcard.js" defer></script>
   <script src="cat.js" defer></script>
   <script src="ambience.js" defer></script>
   <script src="seaside-time.js" defer></script>
   <script src="bottle.js" defer></script>
+  <script src="season.js" defer></script>
   <script src="blog.js" defer></script>
 </head>
 <body>
@@ -102,7 +98,17 @@
 
       <!-- 海景铺满第一屏，标题区叠在上面；下缘渐隐进纸面。遮罩作用在整个 figure 上，底图与 WebGL 画布一起淡出 -->
       <figure class="panorama is-full" id="seaside">
+        <!-- 白天插画的地址放在 data- 属性上，由下面的小脚本交给 seaside-clock.js：首屏是黄昏、夜晚时先不下载它 -->
         <picture>
+          <source media="(max-width: 640px), (max-aspect-ratio: 3/4)" data-srcset="assets/hero/hero-seaside-mobile-crop.webp" width="665" height="887">
+          <img data-src="assets/hero/hero-seaside-desktop-1200.webp"
+               data-srcset="assets/hero/hero-seaside-desktop-1200.webp 1200w, assets/hero/hero-seaside-desktop.webp 1774w"
+               sizes="(min-width: 1240px) 1260px, calc(100vw - 16px)"
+               width="1774" height="887" fetchpriority="high"
+               alt="水彩画：柠檬藤架下的石砌露台，一只猫趴在矮墙上晒太阳，远处是蓝色海湾、帆船和山坡上的白色灯塔。">
+        </picture><script>(function (p) { if (window.seaClock) return seaClock.showDay(p); p.querySelectorAll("source, img").forEach(function (e) { if (e.dataset.srcset) e.srcset = e.dataset.srcset; if (e.dataset.src) e.src = e.dataset.src; }); })(document.currentScript.previousElementSibling);</script>
+        <noscript>
+          <picture>
           <source media="(max-width: 640px), (max-aspect-ratio: 3/4)" srcset="assets/hero/hero-seaside-mobile-crop.webp" width="665" height="887">
           <img src="assets/hero/hero-seaside-desktop-1200.webp"
                srcset="assets/hero/hero-seaside-desktop-1200.webp 1200w, assets/hero/hero-seaside-desktop.webp 1774w"
@@ -110,6 +116,7 @@
                width="1774" height="887" fetchpriority="high"
                alt="水彩画：柠檬藤架下的石砌露台，一只猫趴在矮墙上晒太阳，远处是蓝色海湾、帆船和山坡上的白色灯塔。">
         </picture>
+        </noscript>
         <!-- 站在画中矮墙上的海鸥：放在海景图层里，随插画一起缩放、羽化 -->
         <img class="wall-gull" src="assets/decor/perched-gull.webp" width="235" height="189" alt="">
         <!-- 隐藏彩蛋：画里矮墙上的猫（说的话跟着时间变）。透明按钮的位置由 cat.js 按原画坐标计算，猫看不见时不出现 -->
@@ -134,7 +141,7 @@
       <div class="blog-main">
 <!-- blog:posts -->
 <article class="post-card">
-  <a class="post-cover" href="/posts/hello-seaside/" tabindex="-1" aria-hidden="true"><img src="/assets/posts/hello-seaside-cover.webp" alt="" loading="lazy"></a>
+  <a class="post-cover" href="/posts/hello-seaside/" tabindex="-1" aria-hidden="true"><img src="/assets/posts/hello-seaside-cover.webp" alt="" width="1200" height="460" loading="lazy" decoding="async"></a>
   <div class="post-card-body">
     <h2 class="post-card-title"><a href="/posts/hello-seaside/">你好，海边</a></h2>
     <p class="post-card-summary">一直想要一个属于自己的角落。它最后长成了一片海：有柠檬藤、晒太阳的猫，还有偶尔漂来的瓶子。</p>

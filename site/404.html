@@ -11,9 +11,9 @@
   <link rel="preload" href="/assets/fonts/title-font.woff" as="font" type="font/woff" crossorigin>
   <link rel="alternate" type="application/rss+xml" title="QIYU的海边小世界" href="/feed.xml">
   <script src="/seaside-clock.js"></script>
-  <script src="/postcard.js" defer></script>
   <script src="/ambience.js" defer></script>
   <script src="/seaside-time.js" defer></script>
+  <script src="/season.js" defer></script>
   <script src="/blog.js" defer></script>
 </head>
 <body class="">
@@ -81,12 +81,19 @@
       <!-- 矮一些的海景横幅：跟首页同一幅画，跟着时间变 -->
       <figure class="panorama is-full" aria-hidden="true">
         <picture>
+          <source media="(max-width: 640px), (max-aspect-ratio: 3/4)" data-srcset="/assets/hero/hero-seaside-mobile-crop.webp" width="665" height="887">
+          <img data-src="/assets/hero/hero-seaside-desktop-1200.webp"
+               data-srcset="/assets/hero/hero-seaside-desktop-1200.webp 1200w, /assets/hero/hero-seaside-desktop.webp 1774w"
+               sizes="(min-width: 1240px) 1260px, calc(100vw - 16px)"
+               width="1774" height="887" alt="">
+        </picture><script>(function (p) { if (window.seaClock) return seaClock.showDay(p); p.querySelectorAll("source, img").forEach(function (e) { if (e.dataset.srcset) e.srcset = e.dataset.srcset; if (e.dataset.src) e.src = e.dataset.src; }); })(document.currentScript.previousElementSibling);</script>
+        <noscript><picture>
           <source media="(max-width: 640px), (max-aspect-ratio: 3/4)" srcset="/assets/hero/hero-seaside-mobile-crop.webp" width="665" height="887">
           <img src="/assets/hero/hero-seaside-desktop-1200.webp"
                srcset="/assets/hero/hero-seaside-desktop-1200.webp 1200w, /assets/hero/hero-seaside-desktop.webp 1774w"
                sizes="(min-width: 1240px) 1260px, calc(100vw - 16px)"
                width="1774" height="887" alt="">
-        </picture>
+        </picture></noscript>
       </figure>
     </section>
 

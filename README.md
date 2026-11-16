@@ -12,13 +12,16 @@
   - `blog.js`：站内搜索、文章目录高亮、代码块和本文链接的复制、点击图片放大、滚过首屏后出现的顶栏（带阅读进度和回到顶部）。
   - `posts/`、`archives/`、`categories/`、`tags/`、`about/`、`404.html`、`search.json`、`feed.xml`：由 `scripts/build-blog.mjs` 生成，不要手改。
   - `hero-water.js`：海景的 WebGL 动效（海面流动、指针水波与涟漪、枝叶轻摆、云朵漂移、帆船摇晃、偶尔飞过的海鸥）。
-  - `postcard.js`：旅行手账里明信片的翻面互动。
   - `ambience.js`：页头「听听海」开关与海边声景（海浪、海风、远处海鸥），默认静音。声音跟着时间变：黄昏海鸥变少、海风变柔，夜里只剩轻柔的浪。
   - `seaside-clock.js`：自动时间模式的时段表（按访客本地时间，边界集中在文件开头），并在页面画出来之前定好首屏的时间。
   - `seaside-time.js`：页头的时间切换（白天、黄昏、夜晚、自动）。海景三幅插画交叉淡化，页面纸色、晕染、手账和页脚海浪的色调一起慢慢过渡；自动模式下页面开着也会到点慢慢换过去。
+  - `season.js`：季节小彩蛋，按访客当天的日期在海景里加花瓣（春）、萤火虫（夏，黄昏和夜里）、落叶（秋）或雪（冬）。地址后加 `?season=winter` 等可以预览。
   - `bottle.js`：漂流瓶彩蛋。停留一两分钟后偶尔有瓶子从海面漂来，点开是一封随机的海边来信。
   - `assets/`：插画与素材。
 - `scripts/build-blog.mjs`：博客生成器。
+- `scripts/highlight.mjs`：代码高亮，生成页面时就给代码块上色，浏览器里不加载任何库。
+- `scripts/tex2mathml.mjs`：数学公式，把 `$…$`、`$$…$$` 里的 LaTeX 写法转成浏览器原生的 MathML。
+- `scripts/image-size.mjs`：读图片宽高，给文章里的图片写上 width / height，加载时排版不跳。
 - `scripts/subset-fonts.py`：标题字体子集。首屏大标题、文章和页面标题、正文小标题用「得意黑」（Smiley Sans，SIL OFL 1.1），网站里只放标题用到的字（`site/assets/fonts/title-font.woff`，按许可证改名为 QiyuTitle，许可证在同目录）。
 - `scripts/`：其余是素材处理脚本（生成响应式图片、黄昏与夜晚海景、漂流瓶、动效蒙版、水彩边缘遮罩、环境音母带）。它们读取的原始美术素材不在本仓库中。
 - `server.mjs`：本地预览服务器。
@@ -47,6 +50,10 @@ node scripts/build-blog.mjs
 ```
 
 推送到 `main` 后，GitHub Actions 也会先运行这个脚本再发布。写了 `draft: true` 的文章不会生成。
+
+文章里可以写：
+- 代码块：用三个反引号加语言名，比如 ```` ```python ````，会自动按语法上色（支持 JS/TS、Python、Shell、CSS、HTML、JSON、SQL、YAML 以及 C、Java、Go、Rust 等）。
+- 数学公式：行内 `$P(X=1)$`，单独成段用 `$$ … $$`（可以跨多行），支持分数、上下标、求和、矩阵（`pmatrix`、`bmatrix`）、分段函数（`cases`）、希腊字母等常用写法。写错了会原样显示源码，生成时也会提示。
 
 分享卡片：链接发到 QQ、Discord、Telegram 等地方时会显示标题、简介和一张图。文章有封面时，在封面旁边放一张同名的 `-share.jpg`（1200×630 的 JPEG，比如 `hello-seaside-cover.webp` 旁边的 `hello-seaside-cover-share.jpg`），生成器会自动用它；没有的话用默认分享图 `site/assets/share/qiyu-share.jpg`。
 

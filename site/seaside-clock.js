@@ -39,23 +39,59 @@
   const manual = TIMES.includes(saved) ? saved : null;
   const initial = manual || at();
 
-  window.seaClock = { at, untilNext, KEY, mode: manual ? 'manual' : 'auto', initial };
+  // 白天插画是海景的底层（黄昏、夜晚两层叠在它上面），但不必总是先下载它：
+  // 页面里白天插画的地址写在 data-src / data-srcset 上，紧跟着的小脚本调用 showDay()。
+  // 首屏是白天时马上加载；黄昏、夜晚时先让那个时间的插画下载，整页加载完再在后台补上白天的，
+  // 访客中途切回白天时也会立刻开始下载（ensureDay，seaside-time.js 调用）。
+  let dayPicture = null, dayReady = null;
+  function ensureDay() {
+    if (!dayPicture) return Promise.resolve();
+    if (!dayReady) {
+      const img = dayPicture.querySelector('img');
+      dayReady = new Promise((resolve) => {
+        for (const el of dayPicture.querySelectorAll('source, img')) {
+          if (el.dataset.srcset) el.srcset = el.dataset.srcset;
+          if (el.dataset.src) el.src = el.dataset.src;
+        }
+        if (img.complete && img.naturalWidth) resolve();
+        else { img.addEventListener('load', resolve, { once: true }); img.addEventListener('error', resolve, { once: true }); }
+      });
+    }
+    return dayReady;
+  }
+  function showDay(picture) {
+    dayPicture = picture;
+    if (initial === 'day') { ensureDay(); return; }
+    const later = () => setTimeout(ensureDay, 400);
+    if (document.readyState === 'complete') later(); else addEventListener('load', later, { once: true });
+  }
 
-  if (initial === 'day') return;
+  window.seaClock = { at, untilNext, KEY, mode: manual ? 'manual' : 'auto', initial, showDay, ensureDay };
+
+  // 尽早开始下载首屏那个时间的插画（宽屏横图、窄屏或竖屏用手机竖图）
+  const preload = (desktop, mobile) => {
+    for (const [media, srcset] of [
+      ['(min-width: 641px) and (min-aspect-ratio: 3/4)', desktop],
+      ['(max-width: 640px), (max-aspect-ratio: 3/4)', mobile],
+    ]) {
+      const link = document.createElement('link');
+      link.rel = 'preload'; link.as = 'image'; link.media = media;
+      link.setAttribute('imagesrcset', srcset);
+      link.setAttribute('imagesizes', media.includes('min') ? '(min-width: 1240px) 1260px, calc(100vw - 16px)' : '100vw');
+      link.setAttribute('fetchpriority', 'high');
+      document.head.appendChild(link);
+    }
+  };
+
+  if (initial === 'day') {
+    preload('/assets/hero/hero-seaside-desktop-1200.webp 1200w, /assets/hero/hero-seaside-desktop.webp 1774w', '/assets/hero/hero-seaside-mobile-crop.webp 665w');
+    return;
+  }
   const root = document.documentElement;
   root.dataset.time = initial;
   root.classList.add('time-instant', 'time-boot'); // time-boot：海景先藏着，等这个时间的插画下载好
-  // 和白天插画一样尽早开始下载
-  for (const [media, srcset] of [
-    ['(min-width: 641px) and (min-aspect-ratio: 3/4)', `/assets/hero/hero-seaside-desktop-${initial}-1200.webp 1200w, /assets/hero/hero-seaside-desktop-${initial}.webp 1774w`],
-    ['(max-width: 640px), (max-aspect-ratio: 3/4)', `/assets/hero/hero-seaside-mobile-${initial}.webp 665w`],
-  ]) {
-    const link = document.createElement('link');
-    link.rel = 'preload'; link.as = 'image'; link.media = media;
-    link.setAttribute('imagesrcset', srcset);
-    link.setAttribute('imagesizes', media.includes('min') ? '(min-width: 1240px) 1260px, calc(100vw - 16px)' : '100vw');
-    document.head.appendChild(link);
-  }
+  preload(`/assets/hero/hero-seaside-desktop-${initial}-1200.webp 1200w, /assets/hero/hero-seaside-desktop-${initial}.webp 1774w`,
+    `/assets/hero/hero-seaside-mobile-${initial}.webp 665w`);
   // 万一后面的脚本没能运行，也不要让海景一直藏着
   setTimeout(() => root.classList.remove('time-boot', 'time-instant'), 8000);
 })();

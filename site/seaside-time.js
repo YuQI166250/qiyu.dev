@@ -50,7 +50,7 @@
   img.closest('picture').after(layers.dusk.picture, layers.night.picture);
 
   function load(time) {
-    if (time === 'day') return Promise.resolve();
+    if (time === 'day') return clock && clock.ensureDay ? clock.ensureDay() : Promise.resolve(); // 夜里打开时白天插画可能还没下载
     const layer = layers[time];
     if (!layer.loading) {
       layer.loading = new Promise((resolve, reject) => {

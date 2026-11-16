@@ -23,9 +23,9 @@
   <link rel="preload" href="/assets/fonts/title-font.woff" as="font" type="font/woff" crossorigin>
   <link rel="alternate" type="application/rss+xml" title="QIYU的海边小世界" href="/feed.xml">
   <script src="/seaside-clock.js"></script>
-  <script src="/postcard.js" defer></script>
   <script src="/ambience.js" defer></script>
   <script src="/seaside-time.js" defer></script>
+  <script src="/season.js" defer></script>
   <script src="/blog.js" defer></script>
 </head>
 <body class="is-post">
@@ -93,12 +93,19 @@
       <!-- 矮一些的海景横幅：跟首页同一幅画，跟着时间变 -->
       <figure class="panorama is-full" aria-hidden="true">
         <picture>
+          <source media="(max-width: 640px), (max-aspect-ratio: 3/4)" data-srcset="/assets/hero/hero-seaside-mobile-crop.webp" width="665" height="887">
+          <img data-src="/assets/hero/hero-seaside-desktop-1200.webp"
+               data-srcset="/assets/hero/hero-seaside-desktop-1200.webp 1200w, /assets/hero/hero-seaside-desktop.webp 1774w"
+               sizes="(min-width: 1240px) 1260px, calc(100vw - 16px)"
+               width="1774" height="887" alt="">
+        </picture><script>(function (p) { if (window.seaClock) return seaClock.showDay(p); p.querySelectorAll("source, img").forEach(function (e) { if (e.dataset.srcset) e.srcset = e.dataset.srcset; if (e.dataset.src) e.src = e.dataset.src; }); })(document.currentScript.previousElementSibling);</script>
+        <noscript><picture>
           <source media="(max-width: 640px), (max-aspect-ratio: 3/4)" srcset="/assets/hero/hero-seaside-mobile-crop.webp" width="665" height="887">
           <img src="/assets/hero/hero-seaside-desktop-1200.webp"
                srcset="/assets/hero/hero-seaside-desktop-1200.webp 1200w, /assets/hero/hero-seaside-desktop.webp 1774w"
                sizes="(min-width: 1240px) 1260px, calc(100vw - 16px)"
                width="1774" height="887" alt="">
-        </picture>
+        </picture></noscript>
       </figure>
     </section>
 
@@ -110,7 +117,7 @@
     <p class="post-meta"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12" rx="2"/><path d="M3 8.5h14M7 2.8v3.4M13 2.8v3.4"/></svg><time datetime="2026-10-30">2026-10-30</time><span class="dot" aria-hidden="true">·</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.8 5.6c0-.9.7-1.6 1.6-1.6h3.4l1.6 2h6.2c.9 0 1.6.7 1.6 1.6v7c0 .9-.7 1.6-1.6 1.6H4.4c-.9 0-1.6-.7-1.6-1.6Z"/></svg><a href="/categories/#c-随笔">随笔</a><span class="dot" aria-hidden="true">·</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.2 3.2h6.2l7.4 7.4-6.2 6.2-7.4-7.4Z"/><circle cx="6.8" cy="6.8" r="1.2"/></svg><span class="post-tags"><a href="/tags/#t-网站">网站</a> / <a href="/tags/#t-碎碎念">碎碎念</a></span></p>
     <p class="post-stats">约 296 字<span class="dot" aria-hidden="true"> · </span>读完大约 1 分钟</p>
   </header>
-  <img class="post-hero" src="/assets/posts/hello-seaside-cover.webp" alt="">
+  <img class="post-hero" src="/assets/posts/hello-seaside-cover.webp" alt="" width="1200" height="460" fetchpriority="high" decoding="async">
   <div class="prose">
 <p>一直想要一个属于自己的角落。</p>
 <p>不用很大，也不用很热闹，只要打开的时候能让人慢下来一点。想来想去，它最后长成了一片海：柠檬藤架下的石砌露台，矮墙上晒太阳的猫，远处的帆船和白色灯塔。</p>

@@ -24,6 +24,9 @@ import { readFile, writeFile, readdir, mkdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { highlight } from './highlight.mjs';
+import { tex2mathml } from './tex2mathml.mjs';
+import { imageSize } from './image-size.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SITE = path.join(ROOT, 'site');
@@ -91,12 +94,29 @@ function frontMatter(src) {
 
 // ---------- Markdown（够写博客的一小部分语法） ----------
 // 段落、标题（# 和 ## 都是二级标题）、引用、有序/无序列表、代码块、表格、分隔线、单独一行的图片（带说明文字），
-// 行内：`代码`、**粗体**、*斜体*、~~删除线~~、[链接](网址)、![图片](网址)、行尾两个空格换行。
+// 行内：`代码`、**粗体**、*斜体*、~~删除线~~、[链接](网址)、![图片](网址)、$公式$、行尾两个空格换行。
+// 图片：滚到附近才加载、在后台解码；站内的图片读出宽高写上，下载完之前就留好位置，排版不会跳
+const img = (src, alt) => {
+  const size = src.startsWith('/') && !src.startsWith('//') ? imageSize(path.join(SITE, decodeURI(src))) : null;
+  return `<img src="${src}" alt="${alt}"${size ? ` width="${size.width}" height="${size.height}"` : ''} loading="lazy" decoding="async">`;
+};
+// 公式：$…$ 行内、单独成段的 $$…$$ 居中显示，生成时转成 MathML（scripts/tex2mathml.mjs）；写错了就原样显示源码
+const mathHtml = (tex, display) => {
+  try {
+    return tex2mathml(tex.trim(), display);
+  } catch (err) {
+    console.warn(`公式没能转换（${err.message}），按原样显示：${tex}`);
+    return `<code class="math-raw">${esc(display ? `$$${tex}$$` : `$${tex}$`)}</code>`;
+  }
+};
+// $ 后紧跟非空白、结尾 $ 前也不是空白、后面不接数字，才算公式（「花了 $5 和 $10」不会被误认）
+const INLINE_MATH = /(?<![\\$\w])\$(?=\S)([^$\n]*?[^\s\\])\$(?![\w$])/g;
 function inline(text) {
   const codes = [];
   let s = text.replace(/`([^`]+)`/g, (_, c) => `\u0000${codes.push(`<code>${esc(c)}</code>`) - 1}\u0000`);
+  s = s.replace(INLINE_MATH, (_, tex) => `\u0000${codes.push(mathHtml(tex, false)) - 1}\u0000`);
   s = esc(s);
-  s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_, alt, src) => `<img src="${src}" alt="${alt}" loading="lazy">`);
+  s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_, alt, src) => img(src, alt));
   s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, href) =>
     /^https?:/.test(href) ? `<a href="${href}" target="_blank" rel="noopener">${label}</a>` : `<a href="${href}">${label}</a>`);
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>').replace(/~~([^~]+)~~/g, '<del>$1</del>');
@@ -119,7 +139,7 @@ function markdown(src) {
     if (level <= 3) toc.push({ level, id, text: stripTags(html) });
     out.push(`<h${level} id="${id}">${html}</h${level}>`);
   };
-  const isBlockStart = (l) => /^(```|#{1,4}\s|>|\s*([-*+]|\d+\.)\s|\|)/.test(l) || /^(-{3,}|\*{3,})\s*$/.test(l) || /^<!--.*-->\s*$/.test(l);
+  const isBlockStart = (l) => /^(```|\$\$|#{1,4}\s|>|\s*([-*+]|\d+\.)\s|\|)/.test(l) || /^(-{3,}|\*{3,})\s*$/.test(l) || /^<!--.*-->\s*$/.test(l);
 
   while (i < lines.length) {
     const line = lines[i];
@@ -130,7 +150,15 @@ function markdown(src) {
       const body = [];
       for (i++; i < lines.length && !/^```\s*$/.test(lines[i]); i++) body.push(lines[i]);
       i++;
-      out.push(`<pre${m[1] ? ` data-lang="${esc(m[1])}"` : ''}><code>${body.map((l) => `<span class="line">${esc(l)}</span>`).join('')}</code></pre>`); // 每行是块级元素，不再另加换行
+      // 按语法上色（scripts/highlight.mjs）；每行是块级元素，不再另加换行
+      out.push(`<pre${m[1] ? ` data-lang="${esc(m[1])}"` : ''}><code>${highlight(body.join('\n'), m[1]).map((l) => `<span class="line">${l}</span>`).join('')}</code></pre>`);
+      continue;
+    }
+    if (/^\$\$/.test(line)) { // 单独成段的公式：$$ … $$ 可以写在一行，也可以跨好几行
+      const body = [line.replace(/^\$\$/, '')];
+      while (!/\$\$\s*$/.test(body.at(-1)) && i + 1 < lines.length) body.push(lines[++i]);
+      i++;
+      out.push(`<div class="math-block">${mathHtml(body.join('\n').replace(/\$\$\s*$/, ''), true)}</div>`);
       continue;
     }
     if ((m = /^(#{1,4})\s+(.*?)\s*#*$/.exec(line))) { heading(Math.max(2, m[1].length), m[2]); i++; continue; }
@@ -165,7 +193,7 @@ function markdown(src) {
       continue;
     }
     if ((m = /^!\[([^\]]*)\]\(([^)\s]+)\)\s*$/.exec(line))) {
-      out.push(`<figure><img src="${m[2]}" alt="${esc(m[1])}" loading="lazy">${m[1] ? `<figcaption>${esc(m[1])}</figcaption>` : ''}</figure>`);
+      out.push(`<figure>${img(m[2], esc(m[1]))}${m[1] ? `<figcaption>${esc(m[1])}</figcaption>` : ''}</figure>`);
       i++; continue;
     }
     const para = [];
@@ -218,7 +246,7 @@ const metaLine = (p) => `${ICON.date}<time datetime="${p.date}">${p.date}</time>
   + (p.tags.length ? `<span class="dot" aria-hidden="true">·</span>${ICON.tag}<span class="post-tags">${p.tags.map((t) => `<a href="/tags/#${anchor('t', t)}">${esc(t)}</a>`).join(' / ')}</span>` : '');
 
 const card = (p) => `<article class="post-card">
-  ${p.cover ? `<a class="post-cover" href="${p.url}" tabindex="-1" aria-hidden="true"><img src="${p.cover}" alt="" loading="lazy"></a>` : ''}
+  ${p.cover ? `<a class="post-cover" href="${p.url}" tabindex="-1" aria-hidden="true">${img(p.cover, '')}</a>` : ''}
   <div class="post-card-body">
     <h2 class="post-card-title"><a href="${p.url}">${esc(p.title)}</a></h2>
     <p class="post-card-summary">${esc(p.summary)}</p>
@@ -286,9 +314,9 @@ function shellFrom(index) {
   <link rel="preload" href="/assets/fonts/title-font.woff" as="font" type="font/woff" crossorigin>
   <link rel="alternate" type="application/rss+xml" title="${SITE_NAME}" href="/feed.xml">
   <script src="/seaside-clock.js"></script>
-  <script src="/postcard.js" defer></script>
   <script src="/ambience.js" defer></script>
   <script src="/seaside-time.js" defer></script>
+  <script src="/season.js" defer></script>
   <script src="/blog.js" defer></script>
 </head>
 <body class="${bodyClass}">
@@ -302,7 +330,8 @@ function shellFrom(index) {
       ${markNav(masthead, nav)}
       <!-- 矮一些的海景横幅：跟首页同一幅画，跟着时间变 -->
       <figure class="panorama is-full" aria-hidden="true">
-        ${picture}
+        ${picture}<script>(function (p) { if (window.seaClock) return seaClock.showDay(p); p.querySelectorAll("source, img").forEach(function (e) { if (e.dataset.srcset) e.srcset = e.dataset.srcset; if (e.dataset.src) e.src = e.dataset.src; }); })(document.currentScript.previousElementSibling);</script>
+        <noscript>${picture.replace(/data-(src|srcset)=/g, '$1=')}</noscript>
       </figure>
     </section>
 
@@ -378,7 +407,7 @@ for (const [k, p] of posts.entries()) {
     <p class="post-meta">${metaLine(p)}</p>
     <p class="post-stats">约 ${p.words} 字<span class="dot" aria-hidden="true"> · </span>读完大约 ${Math.max(1, Math.round(p.words / 400))} 分钟${p.updated ? `<span class="dot" aria-hidden="true"> · </span>更新于 <time datetime="${p.updated}">${p.updated}</time>` : ''}</p>
   </header>
-  ${p.cover ? `<img class="post-hero" src="${p.cover}" alt="">` : ''}
+  ${p.cover ? img(p.cover, '').replace('<img', '<img class="post-hero"').replace(' loading="lazy"', ' fetchpriority="high"') : ''}
   <div class="prose">
 ${p.html}
   </div>

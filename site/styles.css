@@ -40,7 +40,7 @@
 /* 黄昏：纸面带一点杏色，晕染换成杏黄、薰衣草紫和淡玫瑰；夜晚：深色模式，纸面换成和夜景天空同色系的深靛蓝，
    文字换成月白，晕染变成很淡的蓝紫光，像夜里的海面（具体的卡片、代码块等见文末「夜晚的深色模式」） */
 :root[data-time="dusk"] {
-  --paper: #fbeee3; --ink: #3a3a5c; --muted: #7c6f86;
+  --paper: #fbeee3; --ink: #3a3a5c; --muted: #6e6278; /* 次要文字对比度 ≥ 4.5（无障碍标准） */
   --sea: #c4603e; --sun: #f2a64a;
   --wash-sun: rgb(255 190 130 / .62); --wash-sea: rgb(206 184 238 / .55); --wash-leaf: rgb(250 184 184 / .5);
   --wave-back: #f3c9b4; --wave-front: #d7bde3;
@@ -159,16 +159,12 @@ figure { margin: 0; }
 @keyframes sound-loading { from { opacity: 1; } to { opacity: .45; } }
 
 /* 首屏 */
-.intro { position: relative; padding-top: clamp(16px, 4vw, 48px); padding-bottom: clamp(40px, 5vw, 72px); }
-.intro-text { position: relative; z-index: 1; max-width: 620px; }
-/* 标题只有一行：字号略放大，字距拉开；文字块下移，与右侧手账的中线对齐 */
+.intro { position: relative; padding-top: clamp(16px, 4vw, 48px); padding-bottom: clamp(40px, 5vw, 72px); }/* 标题只有一行：字号略放大，字距拉开；文字块下移，与右侧手账的中线对齐 */
 .intro h1 {
   margin: 0; font-family: var(--serif); font-weight: 700;
   font-size: clamp(42px, 6.6vw, 88px); line-height: 1.15; letter-spacing: .12em;
 }
-.lead { margin: 20px 0 26px; font-size: clamp(16px, 1.6vw, 19px); line-height: 1.8; color: var(--muted); letter-spacing: .04em; }
-.lead-break { display: none; }
-/* 无边界海景：去掉圆角、阴影和底色，四周用水彩边缘遮罩渐隐进纸面。
+.lead { margin: 20px 0 26px; font-size: clamp(16px, 1.6vw, 19px); line-height: 1.8; color: var(--muted); letter-spacing: .04em; }/* 无边界海景：去掉圆角、阴影和底色，四周用水彩边缘遮罩渐隐进纸面。
    遮罩作用在整个 figure 上——底图、WebGL 画布、飞过的海鸥、提示一起被羽化，始终对齐。
    左右略微伸出内容区，上沿向标题区轻轻上提（淡出部分不会盖住文字）。 */
 .panorama {
@@ -377,122 +373,8 @@ figure { margin: 0; }
 
 /* 透明装饰：只做点缀，不接收点击 */
 .decor { position: absolute; pointer-events: none; user-select: none; }
-.decor-gull { top: 112px; right: 43%; width: 84px; animation: glide 9s ease-in-out infinite; }
-
-/* 旅行手账角落：所有位置按容器百分比排布，随宽度整体缩放 */
-.journal {
-  position: absolute; z-index: 2; top: clamp(24px, 4vw, 56px); right: 4%;
-  width: min(450px, 40%); aspect-ratio: 470 / 360;
-  pointer-events: none; user-select: none;
-}
-.journal img { position: absolute; height: auto; }
-/* 手账也跟着时间换一点色调：黄昏偏暖，夜里更暗、更淡、微微偏冷。
-   色调用 index.html 里的 #time-tone 颜色矩阵，由 seaside-time.js 随海景一起逐帧混合；白天不加滤镜 */
+/* 页面里放颜色矩阵滤镜的 SVG：本身不占位置 */
 .tone-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
-.journal-map {
-  right: 3%; top: 4%; width: 46%;
-  transform: rotate(8deg);
-  filter: drop-shadow(0 8px 14px rgb(29 75 107 / .13));
-}
-/* 可翻面的明信片：按钮本身只做 2D 倾斜和悬停抬起，翻面交给内层 */
-.journal-postcard {
-  --tilt: -4deg;
-  position: absolute; left: 4%; top: 34%; width: 63%;
-  display: block; margin: 0; padding: 0; border: 0; background: none;
-  color: inherit; font: inherit; cursor: pointer;
-  pointer-events: auto; perspective: 1100px;
-  transform: rotate(var(--tilt));
-  transition: transform .35s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-.journal-postcard:hover { transform: rotate(var(--tilt)) translateY(-5px) scale(1.015); }
-.journal-postcard:focus-visible { outline: 3px solid var(--sea); outline-offset: 6px; border-radius: 6px; }
-.postcard-inner {
-  position: relative; display: block;
-  transform-style: preserve-3d;
-  transition: transform .9s cubic-bezier(.45, .05, .25, 1);
-}
-.journal-postcard.is-flipped .postcard-inner { transform: rotateY(180deg); }
-.journal .postcard-front {
-  position: relative; display: block; width: 100%;
-  backface-visibility: hidden; -webkit-backface-visibility: hidden;
-  filter: drop-shadow(0 10px 18px rgb(29 75 107 / .16));
-  transition: filter .35s ease;
-}
-.journal-postcard:hover .postcard-front { filter: drop-shadow(0 16px 22px rgb(29 75 107 / .22)); }
-
-/* 背面：与正面插画里那张略微倾斜的卡片对齐（约 -8.8°，占图片 93% × 78%） */
-.postcard-back {
-  position: absolute; left: 3.45%; top: 10.5%; width: 93.1%; height: 77.9%;
-  container-type: inline-size;
-  transform: rotateY(180deg) rotate(-8.8deg);
-  backface-visibility: hidden; -webkit-backface-visibility: hidden;
-  border-radius: 3px;
-  background-color: #fbf3e2;
-  background-image:
-    radial-gradient(rgb(150 120 80 / .07) 0.8px, transparent 1.1px),
-    radial-gradient(rgb(255 255 255 / .5) 0.8px, transparent 1.1px);
-  background-size: 5px 5px, 7px 7px;
-  background-position: 0 0, 2px 3px;
-  box-shadow: inset 0 0 0 1px rgb(196 168 120 / .35), inset 0 0 22px rgb(196 160 104 / .22), 0 12px 20px rgb(29 75 107 / .16);
-  color: var(--ink); text-align: left;
-}
-.postcard-back::after { /* 中间的分隔线 */
-  content: ""; position: absolute; left: 56%; top: 14%; bottom: 14%;
-  border-left: 1px solid rgb(29 75 107 / .2);
-}
-.postcard-message {
-  position: absolute; left: 6%; top: 20%; width: 49%;
-  font-family: "Kaiti SC", "STKaiti", "KaiTi", "BiauKai", var(--serif);
-  font-size: 4.8cqw; line-height: 1.8; letter-spacing: .02em; color: #1d4b6b; white-space: nowrap;
-}
-.postcard-stamp {
-  position: absolute; right: 6%; top: 9%; width: 15%; aspect-ratio: 40 / 48;
-  padding: 3%; background: #fffdf7;
-  box-shadow: 0 1px 2px rgb(29 75 107 / .2);
-  /* 齿孔：边缘一圈小圆孔，中间保持完整 */
-  -webkit-mask: radial-gradient(circle, #0000 1.4px, #000 1.6px) -2.5px -2.5px / 5px 5px,
-                linear-gradient(#000 0 0) 50% / calc(100% - 5px) calc(100% - 5px) no-repeat;
-  mask: radial-gradient(circle, #0000 1.4px, #000 1.6px) -2.5px -2.5px / 5px 5px,
-        linear-gradient(#000 0 0) 50% / calc(100% - 5px) calc(100% - 5px) no-repeat;
-}
-.postcard-stamp svg { display: block; width: 100%; height: 100%; }
-.postcard-postmark {
-  position: absolute; right: 19%; top: 20%; width: 17%; aspect-ratio: 1;
-  display: grid; place-items: center;
-  border: 1.5px solid rgb(31 111 168 / .45); border-radius: 50%;
-  font-size: 3cqw; letter-spacing: .05em; color: rgb(31 111 168 / .6);
-  transform: rotate(-14deg);
-}
-.postcard-lines {
-  position: absolute; left: 62%; right: 8%; top: 50%; height: 30%;
-  background: repeating-linear-gradient(transparent 0 calc(33.3% - 1px), rgb(29 75 107 / .22) calc(33.3% - 1px) 33.3%);
-}
-.postcard-doodle { position: absolute; left: 6%; bottom: 11%; width: 30%; height: auto; }
-
-/* 翻面时纸胶带先轻轻揭起，翻好后再贴回去 */
-.journal-tape { transition: opacity .25s ease; }
-.journal.is-turning .journal-tape { opacity: 0; }
-
-@container (max-width: 160px) {
-  .postcard-back::after, .postcard-lines, .postcard-postmark, .postcard-doodle { display: none; }
-  /* 手机上卡片很小：两行字放在上方，邮票移到右下角，避开左下角的纸胶带 */
-  .postcard-message { left: 6%; top: 13%; width: auto; font-size: 9.6cqw; line-height: 1.3; letter-spacing: 0; }
-  .postcard-stamp { width: 16%; right: 6%; top: auto; bottom: 9%; }
-}
-
-/* 减少动态效果：不做 3D 旋转，改为正反面淡入淡出 */
-@media (prefers-reduced-motion: reduce) {
-  .postcard-inner, .journal-postcard.is-flipped .postcard-inner { transform: none; }
-  .postcard-back { transform: rotate(-8.8deg); opacity: 0; }
-  .journal .postcard-front, .postcard-back { transition: opacity .2s linear !important; }
-  .journal-postcard.is-flipped .postcard-back { opacity: 1; }
-  .journal-postcard.is-flipped .postcard-front { opacity: 0; }
-}
-.journal-tape { width: 22%; opacity: .88; mix-blend-mode: multiply; }
-.journal-tape-a { left: 1%; top: 80%; width: 18%; transform: rotate(-34deg); }
-.journal-tape-b { left: 52%; top: 35%; transform: rotate(30deg); }
-.journal-lemon { right: 0; top: -9%; width: 25%; transform: rotate(-12deg); transform-origin: 80% 0; }
 
 /* 作品（目前首页不展示作品，样式保留，以后加回作品列表时可直接使用） */
 .works { padding: clamp(56px, 8vw, 96px) 0 clamp(64px, 8vw, 104px); }
@@ -546,9 +428,6 @@ figure { margin: 0; }
   padding: 0 0 22px; font-size: 14px;
 }
 .footer-inner p { margin: 0; }
-.footer-top { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
-.footer-top:hover { text-decoration: underline; text-underline-offset: 4px; }
-
 @keyframes glide {
   0%, 100% { transform: translate(0, 0) rotate(0deg); }
   50% { transform: translate(-18px, -8px) rotate(-3deg); }
@@ -558,13 +437,7 @@ figure { margin: 0; }
   50% { transform: translateY(-5px) rotate(2deg); }
 }
 
-/* 平板：文字区收窄，给手账角落让出位置；海鸥移到更靠右 */
-@media (min-width: 641px) {
-  .intro-text { max-width: min(620px, 56%); margin-top: clamp(24px, 7.2vw, 104px); }
-}
-@media (max-width: 1100px) {
-  .decor-gull { display: none; }
-  .lead-break { display: inline; } /* 平板起副标题分两行，避免碰到右侧明信片 */
+@media (max-width: 1100px) {/* 平板起副标题分两行，避免碰到右侧明信片 */
 }
 
 /* 手机：单列、减少装饰 */
@@ -581,9 +454,7 @@ figure { margin: 0; }
   .time-switch [data-mode="auto"] { margin-left: 5px; }
   .time-switch [data-mode="auto"]::before { left: -4px; }
   .sound-toggle { gap: 6px; }
-  .intro h1 { letter-spacing: .08em; }
-  .lead-break { display: inline; }
-  /* 手机上只留很淡的海蓝晕染 */
+  .intro h1 { letter-spacing: .08em; }  /* 手机上只留很淡的海蓝晕染 */
   .intro::before { background: radial-gradient(60% 30% at 50% 62%, var(--wash-sea), transparent 72%); }
   .panorama {
     margin-top: 4px;
@@ -625,8 +496,6 @@ figure { margin: 0; }
 }
 .masthead-title a { color: inherit; text-decoration: none; }
 .masthead .lead { max-width: none; margin: 14px 0 22px; }
-.masthead .lead-break { display: none; }
-
 .site-search { position: relative; width: min(440px, 100%); margin: 0 auto; }
 .site-search > svg {
   position: absolute; left: 17px; top: 23px; width: 18px; height: 18px; transform: translateY(-50%);
@@ -667,14 +536,6 @@ figure { margin: 0; }
 .site-nav a:hover { color: var(--ink); background-color: rgb(214 236 247 / .5); }
 .site-nav a[aria-current="page"] { color: var(--ink); }
 .intro:has(.masthead) { padding-bottom: clamp(12px, 2vw, 28px); }
-/* 标题居中后，飞过的海鸥挪到右上方，不压在名字上 */
-.intro .decor-gull { top: 64px; right: 9%; }
-
-/* 子页面：标题区更紧凑，海景只露一条 */
-.intro-compact { padding-bottom: clamp(16px, 2.4vw, 28px); }
-.intro-compact .masthead-title { font-size: clamp(40px, 5.4vw, 64px); }
-.intro-compact .masthead .lead { display: none; }
-.intro-compact .site-search { margin-top: 18px; }
 
 /* 两栏：左侧栏、右文章 */
 .blog {
@@ -812,19 +673,14 @@ figure { margin: 0; }
   .toc { display: none; }
 }
 @media (max-width: 640px) {
-  .intro .masthead-title { font-size: clamp(46px, 14vw, 64px); letter-spacing: .24em; padding-left: .24em; }
-  .masthead .lead-break { display: inline; }
-  .masthead .lead { margin: 10px 0 18px; }
+  .intro .masthead-title { font-size: clamp(46px, 14vw, 64px); letter-spacing: .24em; padding-left: .24em; }  .masthead .lead { margin: 10px 0 18px; }
   .site-nav { gap: 0; margin-top: 10px; }
   .site-nav a { gap: 4px; padding: 0 9px; font-size: 14px; letter-spacing: .04em; }
   .site-nav svg { width: 15px; height: 15px; }
 }
 @media (max-width: 440px) {
   .site-nav a { padding: 0 8px; }
-  .site-nav svg { display: none; } /* 很窄时只留文字，六个入口排成一行 */
-  .intro .decor-gull { display: none; }
-  .intro-compact .masthead-title { font-size: 40px; }
-  .blog { gap: 20px; }
+  .site-nav svg { display: none; }   .blog { gap: 20px; }
   .post-card-body { padding: 18px 18px 14px; }
   .post-cover img { aspect-ratio: 2 / 1; }
   .page-card { padding: 22px 18px 26px; }
@@ -870,9 +726,7 @@ figure { margin: 0; }
 .intro.hero::after {
   content: ""; position: absolute; z-index: 1; left: 0; right: 0; top: 0; height: 46%;
   background: linear-gradient(var(--veil), transparent); pointer-events: none;
-}
-.intro.hero .decor-gull { display: none; }
-.panorama.is-full {
+}.panorama.is-full {
   margin: 0; height: 100vh; height: 100svh;
   -webkit-mask: linear-gradient(#000 90%, transparent);
   mask: linear-gradient(#000 90%, transparent);
@@ -998,14 +852,7 @@ figure { margin: 0; }
   .float-bar-home span { display: none; }
   .float-bar .float-bar-search { display: none; } /* 手机上用首屏的搜索框 */
   .float-bar-inner { gap: 6px; }
-}
-.float-bar-top {
-  flex: none; display: grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 50%;
-  background: transparent; color: var(--ink); cursor: pointer;
-}
-.float-bar-top:hover { background: rgb(214 236 247 / .6); }
-.float-bar-top svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.float-bar-progress { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: linear-gradient(90deg, var(--sun), var(--sea)); transform-origin: 0 50%; transform: scaleX(0); }
+}.float-bar-progress { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: linear-gradient(90deg, var(--sun), var(--sea)); transform-origin: 0 50%; transform: scaleX(0); }
 .toc { top: 74px; }
 .prose h2, .prose h3, .prose h4, .group { scroll-margin-top: 72px; }
 
@@ -1173,10 +1020,7 @@ figure { margin: 0; }
   30% { transform: translate(-60vw, -6px); }
   50% { transform: translate(-100vw, 8px); opacity: .9; }
   56%, 100% { transform: translate(-115vw, 0); opacity: 0; }
-}
-.footer-top span { display: inline-block; margin-left: 4px; transition: transform .3s ease; }
-.footer-top:hover span { transform: translateY(-4px); }
-.footer-copy { color: var(--muted); font-size: 13.5px; letter-spacing: .04em; }
+}.footer-copy { color: var(--muted); font-size: 13.5px; letter-spacing: .04em; }
 @media (max-width: 640px) {
   .decor-boat { animation: bob 6s ease-in-out infinite; }
 }
@@ -1231,7 +1075,7 @@ figure { margin: 0; }
    海景下面的部分（文章、侧栏、顶栏、页脚）换成深靛蓝底、月白字；颜色变量见开头的 :root[data-time="night"]。
    这里只处理写死了浅色的地方：浅蓝底色、细线、代码块、搜索框和结果、提示气泡。
    海景里的猫的话、漂流瓶的信、明信片背面还是浅色纸，字仍用深墨色 */
-:root[data-time="night"] .cat-says, :root[data-time="night"] .bottle-letter, :root[data-time="night"] .postcard-back {
+:root[data-time="night"] .cat-says, :root[data-time="night"] .bottle-letter {
   --ink: #1c3150; --muted: #56647e; --sea: #1f6fa8;
 }
 :root[data-time="night"] .bottle-letter::backdrop { background: rgb(8 14 32 / .55); }
@@ -1246,7 +1090,7 @@ figure { margin: 0; }
 :root[data-time="night"] .prose pre { background: rgb(4 9 26 / .35); }
 :root[data-time="night"] .prose pre code { background: none; }
 :root[data-time="night"] .prose blockquote { border-left-color: rgb(141 184 239 / .45); }
-:root[data-time="night"] :is(.code-copy, .copy-link, .float-bar-nav a, .float-bar-top, .profile-links a, .profile-qq, .search-results a, .post-nav a):is(:hover, .is-active) { background: rgb(140 170 255 / .16); }
+:root[data-time="night"] :is(.code-copy, .copy-link, .float-bar-nav a, .profile-links a, .profile-qq, .search-results a, .post-nav a):is(:hover, .is-active) { background: rgb(140 170 255 / .16); }
 :root[data-time="night"] .copy-link { border-color: rgb(141 184 239 / .35); }
 /* 顶栏和搜索 */
 :root[data-time="night"] .float-bar { box-shadow: 0 4px 18px rgb(0 0 0 / .3); }
@@ -1314,7 +1158,7 @@ body::after {
 :root[data-time="dusk"] .prose pre code { background: none; }
 :root[data-time="dusk"] .prose blockquote { border-left-color: rgb(196 96 62 / .4); }
 :root[data-time="dusk"] .prose h2::before { background: linear-gradient(#f6c35c, #e0704a); }
-:root[data-time="dusk"] :is(.code-copy, .copy-link, .float-bar-nav a, .float-bar-top, .profile-links a, .profile-qq, .search-results a, .post-nav a):is(:hover, .is-active) { background: rgb(252 210 184 / .5); }
+:root[data-time="dusk"] :is(.code-copy, .copy-link, .float-bar-nav a, .profile-links a, .profile-qq, .search-results a, .post-nav a):is(:hover, .is-active) { background: rgb(252 210 184 / .5); }
 :root[data-time="dusk"] .copy-link { border-color: rgb(196 96 62 / .3); }
 :root[data-time="dusk"] .float-bar { box-shadow: 0 4px 18px rgb(170 90 70 / .1); }
 :root[data-time="dusk"] .search-results mark { background: rgb(246 195 92 / .45); }
@@ -1536,3 +1380,42 @@ body::before {
 .profile-links { gap: 2px; }
 .profile-links a, .profile-qq { width: 35px; height: 35px; }
 @media (min-width: 721px) and (max-width: 1100px) { .profile-links a, .profile-qq { width: 32px; height: 32px; } .profile-links { gap: 1px; } }
+
+/* ================= 代码高亮 =================
+   颜色在生成页面时就标好了（scripts/highlight.mjs），这里只管配色：白天偏海边的柔和色，黄昏偏暖，夜晚在深底上提亮 */
+.prose pre { --tok-keyword: #8a3ea8; --tok-string: #2e7d4f; --tok-number: #b35a1c; --tok-comment: #8597a3; --tok-fn: #1f6fa8;
+  --tok-literal: #b8395b; --tok-attr: #8c6400; --tok-tag: #1f6fa8; --tok-var: #b04a7a; --tok-meta: #7d6608; }
+:root[data-time="dusk"] .prose pre { --tok-keyword: #9a3a78; --tok-string: #3f7a3a; --tok-number: #c4603e; --tok-comment: #9c8e98;
+  --tok-fn: #3b5ba8; --tok-literal: #b8395b; --tok-attr: #996100; --tok-tag: #3b5ba8; --tok-var: #a8467a; --tok-meta: #8a6a10; }
+:root[data-time="night"] .prose pre { --tok-keyword: #c9a6ff; --tok-string: #a5dba0; --tok-number: #f4b47e; --tok-comment: #7f8daf;
+  --tok-fn: #8db8ef; --tok-literal: #ff9db4; --tok-attr: #f0cf7a; --tok-tag: #8db8ef; --tok-var: #f3a6c8; --tok-meta: #e8d27a; }
+.tok-keyword { color: var(--tok-keyword); }
+.tok-string { color: var(--tok-string); }
+.tok-number { color: var(--tok-number); }
+.tok-comment { color: var(--tok-comment); font-style: italic; }
+.tok-fn { color: var(--tok-fn); }
+.tok-literal { color: var(--tok-literal); }
+.tok-attr { color: var(--tok-attr); }
+.tok-tag { color: var(--tok-tag); }
+.tok-var { color: var(--tok-var); }
+.tok-meta { color: var(--tok-meta); }
+
+/* ================= 数学公式 =================
+   生成时转成浏览器原生的 MathML（scripts/tex2mathml.mjs），这里只调大小和间距；单独成段的公式太宽时可以左右滑 */
+.prose math { font-size: 1.08em; }
+.prose .math-block { margin: 1.2em 0 1.4em; padding: 4px 0; overflow-x: auto; overflow-y: hidden; text-align: center; }
+.prose .math-block math { font-size: 1.15em; }
+.prose .math-raw { color: var(--muted); }
+/* 代码里不合成连字（=> 不变成 ⇒，-> 不变成 →），照原样显示，抄代码时不会看错 */
+.prose code, .prose pre { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+
+/* ================= 无障碍：对比度和键盘焦点 =================
+   顶栏导航和页脚版权原来用最淡的次要色，叠在半透明底上对比度不够，往正文色靠一点；
+   顶栏搜索框获得焦点时也要有一圈看得见的光环（原来被 box-shadow: none 盖掉了） */
+.float-bar-nav a { color: color-mix(in srgb, var(--ink) 80%, var(--paper)); }
+.footer-copy { color: color-mix(in srgb, var(--muted) 70%, var(--ink)); }
+.float-bar .float-bar-search input:focus { border-color: rgb(31 111 168 / .5); box-shadow: 0 0 0 3px rgb(31 111 168 / .18); }
+:root[data-time="night"] .float-bar .float-bar-search input:focus { border-color: rgb(141 184 239 / .6); box-shadow: 0 0 0 3px rgb(141 184 239 / .22); }
+
+/* 季节小彩蛋（season.js）：叠在海景插画和海面之上、猫和漂流瓶按钮之下，不接收点击；跟着海景一起被下缘的渐隐遮住 */
+.season-layer { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; }
