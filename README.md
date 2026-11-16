@@ -48,6 +48,8 @@ node scripts/build-blog.mjs
 
 推送到 `main` 后，GitHub Actions 也会先运行这个脚本再发布。写了 `draft: true` 的文章不会生成。
 
+分享卡片：链接发到 QQ、Discord、Telegram 等地方时会显示标题、简介和一张图。文章有封面时，在封面旁边放一张同名的 `-share.jpg`（1200×630 的 JPEG，比如 `hello-seaside-cover.webp` 旁边的 `hello-seaside-cover-share.jpg`），生成器会自动用它；没有的话用默认分享图 `site/assets/share/qiyu-share.jpg`。
+
 如果生成时提示「标题字体缺字」，说明新标题里有字体子集里还没有的字（会先用系统字体显示）。运行下面的命令重新裁一次字体，再提交 `site/assets/fonts/title-font.woff` 和 `scripts/title-font-chars.txt`。它需要 fontTools，以及放在本机 `design/fonts/` 里的原字体 `SmileySans-Oblique.ttf`（可从 https://github.com/atelier-anchor/smiley-sans/releases 下载）：
 
 ```bash

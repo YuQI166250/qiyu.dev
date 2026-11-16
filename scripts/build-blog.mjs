@@ -21,6 +21,7 @@
 //   site/search.json（站内搜索索引）、site/feed.xml（RSS）
 // 页头、页脚、侧栏的「关于我」卡片直接从 site/index.html 里取，首页改了这些，其他页面跟着变。
 import { readFile, writeFile, readdir, mkdir, rm } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -31,6 +32,29 @@ const ORIGIN = 'https://qiyu.dev';
 const AUTHOR = 'QIYU';
 const SITE_NAME = 'QIYU的海边小世界'; // RSS 用的网站名
 const TAB_NAME = 'QIYU'; // 浏览器标签上的名字：「文章标题 · QIYU」
+const SITE_URL = 'https://qiyu.dev';
+const SHARE_IMAGE = '/assets/share/qiyu-share.jpg'; // 默认分享图（1200×630，海景 + 站名）
+
+// 分享卡片：链接发到 QQ、Discord、Telegram 等地方时显示标题、简介和图片（Open Graph / Twitter Card）。
+// 文章有封面时，用封面旁边同名的「-share.jpg」（1200×630，JPEG 兼容性最好）；没有就用默认分享图
+const shareImageFor = (cover) => {
+  if (!cover) return SHARE_IMAGE;
+  const jpg = cover.replace(/\.[a-z]+$/i, '-share.jpg');
+  return existsSync(path.join(SITE, jpg)) ? jpg : SHARE_IMAGE;
+};
+const shareTags = ({ path: url, title, description, image = SHARE_IMAGE, type = 'website', published }) => `
+  <link rel="canonical" href="${SITE_URL}${url}">
+  <meta property="og:type" content="${type}">
+  <meta property="og:site_name" content="${SITE_NAME}">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:title" content="${esc(title)}">
+  <meta property="og:description" content="${esc(description)}">
+  <meta property="og:url" content="${SITE_URL}${url}">
+  <meta property="og:image" content="${SITE_URL}${image}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">${published ? `
+  <meta property="article:published_time" content="${published}">` : ''}
+  <meta name="twitter:card" content="summary_large_image">`;
 const HOME_LIMIT = 10; // 首页最多列几篇，更早的去归档页看
 // 评论：giscus，评论存在仓库的 GitHub Discussions 里，访客用 GitHub 账号登录后留言。
 // repoId、categoryId 在 https://giscus.app 填入仓库名后获得；两个都填了才显示评论区。
@@ -249,14 +273,14 @@ function shellFrom(index) {
   const picture = pick(/<picture>[\s\S]*?<\/picture>/, '海景插画').replace(/(src|srcset)="assets\//g, '$1="/assets/').replace(/, assets\//g, ', /assets/')
     .replace(/fetchpriority="high"\s*/, '').replace(/alt="[^"]*"/, 'alt=""');
 
-  return ({ title, description, nav, main, side, bodyClass = '' }) => `<!doctype html>
+  return ({ title, description, nav, main, side, bodyClass = '', share }) => `<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#fbf7ec">
   <meta name="description" content="${esc(description)}">
-  <title>${esc(title)}</title>
+  <title>${esc(title)}</title>${share ? shareTags({ description, ...share }) : ''}
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
   <link rel="preload" href="/assets/fonts/title-font.woff" as="font" type="font/woff" crossorigin>
@@ -373,13 +397,15 @@ ${GISCUS.repoId && GISCUS.categoryId ? `<section class="page-card comments" id="
   <p class="comments-note">用 GitHub 账号登录后就能留言。</p>
   <div class="giscus"></div>
 </section>` : ''}`;
-  await write(`posts/${p.slug}/index.html`, page({ title: `${p.title} · ${TAB_NAME}`, description: p.summary, nav: '', main, side: tocCard(p.toc) || side, bodyClass: 'is-post' }));
+  await write(`posts/${p.slug}/index.html`, page({ title: `${p.title} · ${TAB_NAME}`, description: p.summary, nav: '', main, side: tocCard(p.toc) || side, bodyClass: 'is-post',
+    share: { path: p.url, title: p.title, image: shareImageFor(p.cover), type: 'article', published: p.date } }));
 }
 
 // 归档：按年份
 const years = countBy(posts.map((p) => ({ ...p, year: p.date.slice(0, 4) })), 'year').sort((a, b) => b[0].localeCompare(a[0]));
 await write('archives/index.html', page({
   title: `归档 · ${TAB_NAME}`, description: `${AUTHOR} 的全部文章`, nav: '/archives/', side,
+  share: { path: '/archives/', title: `归档 · ${SITE_NAME}` },
   main: `<div class="page-card">
   <h1 class="page-title">归档</h1>
   <p class="page-sub">一共 ${posts.length} 篇，慢慢写。</p>
@@ -391,6 +417,7 @@ await write('archives/index.html', page({
 // 分类、标签：一页列出全部，用锚点跳到对应的那一组
 const groupPage = (kind, label, prefix, groups) => page({
   title: `${label} · ${TAB_NAME}`, description: `${AUTHOR} 的文章${label}`, nav: `/${kind}/`, side,
+  share: { path: `/${kind}/`, title: `${label} · ${SITE_NAME}` },
   main: `<div class="page-card">
   <h1 class="page-title">${label}</h1>
   <p class="tag-cloud page-cloud">${groups.map(([g, ps]) => `<a href="#${anchor(prefix, g)}" data-weight="${Math.min(3, ps.length)}">${prefix === 't' ? '#' : ''}${esc(g)}<span>${ps.length}</span></a>`).join('')}</p>
@@ -409,6 +436,7 @@ if (about) {
   const { meta, body } = frontMatter(about);
   await write('about/index.html', page({
     title: `${meta.title || '关于'} · ${TAB_NAME}`, description: meta.summary || `关于 ${AUTHOR}`, nav: '/about/', side,
+    share: { path: '/about/', title: `${meta.title || '关于'} · ${SITE_NAME}` },
     main: `<article class="page-card post">
   <header class="post-header"><h1 class="post-title">${esc(meta.title || '关于')}</h1></header>
   <div class="prose">
