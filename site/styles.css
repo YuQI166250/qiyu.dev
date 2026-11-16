@@ -1260,7 +1260,7 @@ body::before {
   .intro.hero:not(.is-compact) .site-search { margin: 0; }
 }
 /* 入场：依次浮现 */
-.intro.hero:not(.is-compact) .masthead > * { animation: hero-rise 1.1s cubic-bezier(.2, .7, .2, 1) both; }
+.intro.hero:not(.is-compact) .masthead > * { animation: hero-rise 1.1s cubic-bezier(.2, .7, .2, 1) backwards; } /* 结束后不再锁住透明度，别的样式（比如搜索时导航淡出）才能生效 */
 .intro.hero:not(.is-compact) .masthead > :nth-child(2) { animation-delay: .25s; }
 .intro.hero:not(.is-compact) .masthead > :nth-child(3) { animation-delay: .45s; }
 .intro.hero:not(.is-compact) .masthead > :nth-child(4) { animation-delay: .6s; }
@@ -1419,3 +1419,10 @@ body::before {
 
 /* 季节小彩蛋（season.js）：叠在海景插画和海面之上、猫和漂流瓶按钮之下，不接收点击；跟着海景一起被下缘的渐隐遮住 */
 .season-layer { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; }
+
+/* 首屏搜索的结果下拉框会盖住下面的导航条：导航条有磨砂（backdrop-filter）自成一层，排在搜索框后面就会压住下拉框，
+   所以把整个搜索框（连同下拉框）提到导航条上面一层 */
+.intro.hero .site-search { z-index: 5; }
+/* 搜索结果展开时，下面的导航条先淡出（它比下拉框宽，两头会露出来），收起后再回来 */
+.intro.hero .site-nav { transition: opacity .25s ease; }
+.intro.hero .masthead:has(.search-results:not([hidden])) .site-nav { opacity: 0; pointer-events: none; }
