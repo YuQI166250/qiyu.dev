@@ -18,7 +18,6 @@ OUT = ROOT / "site/assets"
 # 原样复制的文件
 COPY = [
     "hero/hero-seaside-desktop.webp",
-    "hero/hero-seaside-mobile-crop.webp",
     "covers/sea-cover.webp",
     "covers/breeze-cover-temp.webp",
     "decor/lemon-branch.png",
@@ -27,6 +26,11 @@ COPY = [
     "decor/watercolor-cloud.png",
     "scenes/sea-watercolor-desktop.webp",
     "scenes/sea-watercolor-mobile.webp",
+]
+
+# 重新压缩（尺寸不变）：手机版海景原图约 200KB，用 WebP 质量 80 重存约 120KB，放大看也看不出差别，手机首屏快不少
+REENCODE = [
+    ("hero/hero-seaside-mobile-crop.webp", 80),
 ]
 
 # 额外生成的缩小版本：(源文件, 目标宽度)
@@ -154,6 +158,12 @@ def main() -> None:
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(SRC / rel, dest)
         print("copy  ", rel)
+
+    for rel, quality in REENCODE:
+        with Image.open(SRC / rel) as im:
+            dest = OUT / rel
+            im.convert("RGB").save(dest, "WEBP", quality=quality, method=6)
+            print("encode", rel, f"q{quality}")
 
     for rel, width in RESIZE:
         src = SRC / rel

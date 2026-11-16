@@ -201,6 +201,18 @@
     } else load();
   }
 
+  // ---------- 首屏下方的小箭头 ----------
+  // 点一下整页往下滚，滚到顶栏刚好盖住这个箭头为止（再多盖一点点），头像卡片就出现在屏幕上方
+  const cue = document.querySelector('.scroll-cue');
+  if (cue) {
+    cue.addEventListener('click', (e) => {
+      e.preventDefault();
+      const top = 54 + 6; // 顶栏高 54px（见 .float-bar-inner），再多盖 6px
+      const by = cue.getBoundingClientRect().bottom - top;
+      window.scrollTo({ top: window.scrollY + by, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    });
+  }
+
   // ---------- 滚过首屏后出现的顶栏：网站名、当前标题、回到顶部；文章页显示阅读进度 ----------
   const hero = document.querySelector('.intro.hero');
   if (hero) {

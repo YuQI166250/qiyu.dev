@@ -1045,7 +1045,7 @@ figure { margin: 0; }
 @media (max-width: 720px) {
   /* 窄屏的首页：「关于我」和侧栏卡片放在文章列表上面 */
   .blog:has(.post-card) .blog-side { order: -1; }
-  .blog { display: flex; flex-direction: column; }
+  .blog { display: flex; flex-direction: column; align-items: stretch; } /* 两栏时的 align-items: start 会让单列卡片按内容缩窄 */
 }
 
 /* 右下角的圆形「回到顶部」按钮：电脑和手机都只用这一个（顶栏和页脚里不再放） */
@@ -1523,3 +1523,11 @@ body::before {
 }
 .sound-hint.is-shown { opacity: 1; transform: none; }
 :root[data-time="night"] .sound-hint { background: rgb(16 26 54 / .6); color: #e4e9f5; box-shadow: 0 4px 14px rgb(0 0 0 / .25); }
+
+/* 搜索框加了磨砂（backdrop-filter）后会盖住前面的放大镜图标，把图标提到上面一层 */
+.site-search > svg { z-index: 1; }
+/* 手机上「点一下页面，继续听海」改成屏幕底部居中的小提示，不再压住标题 */
+@media (max-width: 640px) {
+  .sound-hint { position: fixed; left: 50%; right: auto; top: auto; bottom: 26px; transform: translate(-50%, 8px); }
+  .sound-hint.is-shown { transform: translate(-50%, 0); }
+}
