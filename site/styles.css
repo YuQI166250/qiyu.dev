@@ -1555,6 +1555,13 @@ body::before {
 @media (hover: hover) {
   :is(.past-hero, :has(.intro.hero.is-compact)) .sound-dock:not(.is-stashed):hover .sound-stash { display: grid; }
 }
+/* 手机没有「鼠标移上去」：小圆球旁边一直留着收起箭头，随时能收到边上、再拿出来；
+   点圆球播放或暂停时，胶囊展开几秒（看得到「听听海」和正在播放的内容），再自己缩回去（ambience.js 加 .is-peek） */
+@media (hover: none) {
+  :is(.past-hero, :has(.intro.hero.is-compact)) .site-header .sound-dock:not(.is-stashed) .sound-stash { display: grid; }
+  :is(.past-hero, :has(.intro.hero.is-compact)) .site-header .sound-dock.is-peek .sound-toggle { padding-right: 14px; gap: 10px; }
+  :is(.past-hero, :has(.intro.hero.is-compact)) .site-header .sound-dock.is-peek .sound-toggle .sound-track { display: flex; }
+}
 /* 小圆球展开后，整片区域（胶囊、中间的空隙、收起箭头）都算「鼠标在上面」，移向箭头时不会缩回去；
    四周再多留一圈看不见的边，鼠标稍微出界也不会马上收起 */
 @media (hover: hover) {

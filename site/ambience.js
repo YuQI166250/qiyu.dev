@@ -491,6 +491,16 @@
     stash.hidden = false;
   }
 
+  // 手机上滚过首屏后播放器是个小圆球，没有「鼠标移上去展开」：点它播放或暂停时，胶囊展开 3 秒再缩回去
+  const touchOnly = window.matchMedia('(hover: none)');
+  let peekTimer = 0;
+  button.addEventListener('click', () => {
+    if (!dock || !touchOnly.matches) return;
+    dock.classList.add('is-peek');
+    clearTimeout(peekTimer);
+    peekTimer = setTimeout(() => dock.classList.remove('is-peek'), 3000);
+  });
+
   setUi('off');
   button.hidden = false;
   if (remembered()) resumeRemembered();
