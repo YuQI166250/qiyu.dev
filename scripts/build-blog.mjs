@@ -18,7 +18,7 @@
 // 输出
 //   site/index.html 里 <!-- blog:posts --> 和 <!-- blog:side --> 之间的文章列表与侧栏（其余部分手写，不动）
 //   site/posts/<slug>/、site/archives/、site/categories/、site/tags/、site/about/、site/404.html
-//   site/search.json（站内搜索索引）、site/feed.xml（RSS）
+//   site/search.json（站内搜索索引）、site/feed.xml（RSS）、site/sitemap.xml 和 site/robots.txt（给搜索引擎）
 // 页头、页脚、侧栏的「关于我」卡片直接从 site/index.html 里取，首页改了这些，其他页面跟着变。
 import { readFile, writeFile, readdir, mkdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -510,6 +510,27 @@ ${posts.slice(0, 20).map((p) => `  <item>
   </item>`).join('\n')}
 </channel>
 </rss>
+`);
+
+// 站点地图和 robots.txt：告诉搜索引擎有哪些页面（404 不放进去）
+const latest = posts.reduce((d, p) => ((p.updated || p.date) > d ? p.updated || p.date : d), '');
+const sitemapUrls = [
+  { loc: '/', lastmod: latest },
+  ...posts.map((p) => ({ loc: p.url, lastmod: p.updated || p.date })),
+  { loc: '/archives/', lastmod: latest },
+  { loc: '/categories/', lastmod: latest },
+  { loc: '/tags/', lastmod: latest },
+  { loc: '/about/' },
+];
+await write('sitemap.xml', `<?xml version="1.0" encoding="utf-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${sitemapUrls.map((u) => `  <url><loc>${ORIGIN}${encodeURI(u.loc)}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ''}</url>`).join('\n')}
+</urlset>
+`);
+await write('robots.txt', `User-agent: *
+Allow: /
+
+Sitemap: ${ORIGIN}/sitemap.xml
 `);
 
 await checkTitleFont([home, ...written]);

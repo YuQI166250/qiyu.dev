@@ -669,7 +669,7 @@ figure { margin: 0; }
 @media (max-width: 720px) {
   .blog { grid-template-columns: minmax(0, 1fr); }
   .blog-main, .blog-side { grid-column: 1; grid-row: auto; }
-  /* 窄屏：单列，侧栏卡片一张一行（关于我、分类、热门标签、最近更新都在）；文章目录收起 */
+  /* 窄屏：单列，文章在前，侧栏卡片排在后面一张一行（关于我、分类、热门标签、最近更新都在）；文章目录收起 */
   .toc { display: none; }
 }
 @media (max-width: 640px) {
@@ -890,8 +890,7 @@ figure { margin: 0; }
 .profile-card .profile-bio { margin: 4px 0 12px; }
 
 @media (max-width: 720px) {
-  /* 窄屏的首页：「关于我」和侧栏卡片放在文章列表上面 */
-  .blog:has(.post-card) .blog-side { order: -1; }
+  /* 窄屏：文章在前，「关于我」和侧栏卡片排在文章后面，打开就能看到文章 */
   .blog { display: flex; flex-direction: column; align-items: stretch; } /* 两栏时的 align-items: start 会让单列卡片按内容缩窄 */
 }
 
