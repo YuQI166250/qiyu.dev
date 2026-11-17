@@ -81,6 +81,17 @@
     if (state !== 'waiting') hint.classList.remove('is-shown');
   }
 
+  // 播放器上的「正在播放」：跟着海边的时间换一句；写两遍，播放时整行向左滚，接缝处看不出来
+  const NOW = { day: '海浪 · 海风 · 远处的海鸥', dusk: '黄昏的海浪 · 慢下来的晚风', night: '夜里只剩轻轻的浪声' };
+  const nowText = button.querySelector('.sound-now-text');
+  function setNow() {
+    if (!nowText) return;
+    const line = NOW[document.documentElement.dataset.time] || NOW.day;
+    nowText.textContent = `${line}　　${line}　　`;
+  }
+  setNow();
+  new MutationObserver(setNow).observe(document.documentElement, { attributes: true, attributeFilter: ['data-time'] });
+
   // 换页后等点按时的小提示，挂在按钮下方
   const hint = document.createElement('span');
   hint.className = 'sound-hint';
@@ -452,6 +463,33 @@
     if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {});
   });
   window.addEventListener('pageshow', (e) => { if (e.persisted && wanted && ctx) play(); });
+
+  // 收到边上：播放器整个滑进屏幕左边，只留一条小把手（正在播放时把手上有小音柱在跳），点把手再滑出来。
+  // 选择记在这台设备的浏览器里（localStorage），下次打开网站还是收着；声音不受影响，收着也照样在放
+  const dock = button.closest('.sound-dock');
+  const stash = dock && dock.querySelector('.sound-stash');
+  const DOCK_KEY = 'seaside-sound-dock';
+  function setStashed(on, animate) {
+    if (!dock) return;
+    dock.classList.toggle('is-stashed', on);
+    dock.classList.toggle('is-moving', !!animate);
+    if (animate) setTimeout(() => dock.classList.remove('is-moving'), 500);
+    stash.setAttribute('aria-expanded', String(!on));
+    stash.setAttribute('aria-label', on ? '把「听听海」拿出来' : '把「听听海」收到边上');
+    stash.title = on ? '听听海' : '收到边上';
+    button.tabIndex = on ? -1 : 0;
+  }
+  if (stash) {
+    let saved = false;
+    try { saved = localStorage.getItem(DOCK_KEY) === 'stashed'; } catch (err) { /* 无痕模式等：不记 */ }
+    setStashed(saved, false);
+    stash.addEventListener('click', () => {
+      const on = !dock.classList.contains('is-stashed');
+      setStashed(on, true);
+      try { if (on) localStorage.setItem(DOCK_KEY, 'stashed'); else localStorage.removeItem(DOCK_KEY); } catch (err) { /* 不记也没关系 */ }
+    });
+    stash.hidden = false;
+  }
 
   setUi('off');
   button.hidden = false;

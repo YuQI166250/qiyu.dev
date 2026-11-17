@@ -58,14 +58,20 @@
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16.2 8.4A6.4 6.4 0 1 0 15 13.8"/><path d="M16.6 5.2v3.4h-3.4M10 6.6V10l2.2 1.6"/></svg>
       </button>
     </div>
-    <!-- 海边声景开关：默认静音，点开才下载声音；不支持 Web Audio 时保持隐藏 -->
-    <button class="sound-toggle" type="button" aria-pressed="false" hidden>
-      <svg class="sound-waves" viewBox="0 0 28 16" aria-hidden="true">
-        <path class="sound-wave-a" d="M1 6c3-3 5 3 8 0s5 3 8 0 5 3 8 0"/>
-        <path class="sound-wave-b" d="M3 12c3-3 5 3 8 0s5 3 8 0 5 3 8 0"/>
-      </svg>
-      <span class="sound-label">听听海</span>
-    </button>
+    <!-- 海边声景：左下角的小播放器（默认静音，点开才下载声音；不支持 Web Audio 时保持隐藏）。
+         圆形的播放/暂停、「听听海」和随时间变化的「正在播放」、播放时跳动的小音柱；
+         旁边的小箭头可以把它收到屏幕左边，只露一条小把手，下次打开网站还记得 -->
+    <div class="sound-dock">
+      <button class="sound-toggle" type="button" aria-pressed="false" hidden>
+        <span class="sound-play" aria-hidden="true"><svg viewBox="0 0 20 20"><path class="sound-icon-play" d="M7.2 5.4v9.2l7.4-4.6Z"/><path class="sound-icon-pause" d="M6.6 5.4h2.4v9.2H6.6ZM11 5.4h2.4v9.2H11Z"/></svg></span>
+        <span class="sound-track">
+          <span class="sound-label">听听海</span>
+          <span class="sound-now" aria-hidden="true"><span class="sound-now-text"></span></span>
+        </span>
+        <span class="sound-eq" aria-hidden="true"><i></i><i></i><i></i></span>
+      </button>
+      <button class="sound-stash" type="button" aria-expanded="true" aria-label="把「听听海」收到边上" title="收到边上" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.4 5.2 7.6 10l4.8 4.8"/></svg><span class="sound-stash-eq" aria-hidden="true"><i></i><i></i><i></i></span></button>
+    </div>
     </div>
   </header>
 

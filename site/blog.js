@@ -255,6 +255,7 @@
       // 首屏里的导航一滚出视线就出现（首页内容少、滚不过整个首屏时也能看到）
       const shown = (mastNav || hero).getBoundingClientRect().bottom < 0;
       bar.classList.toggle('is-shown', shown);
+      document.documentElement.classList.toggle('past-hero', shown); // 左下角的「听听海」播放器据此收成一个圆按钮
       bar.inert = !shown;
       backTop.classList.toggle('is-shown', shown);
       backTop.tabIndex = shown ? 0 : -1;
