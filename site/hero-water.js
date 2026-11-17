@@ -42,6 +42,7 @@
   let running = false, visible = false, raf = 0, last = 0, acc = 0, time = 0, frameCount = 0;
   let lastPointer = null;
   let layerSrc = { dusk: '', night: '' }; // 已经传进纹理的黄昏、夜晚图片地址
+  let layerPending = { dusk: '', night: '' }; // 正在后台解码、还没传进纹理的地址
   let view = { scale: [1, 1], offset: [0, 0] };
 
   const VERT = `
@@ -131,14 +132,6 @@
       gl_FragColor = vec4(color, 1.0);
     }`;
 
-  function compile(type, source) {
-    const s = gl.createShader(type);
-    gl.shaderSource(s, source);
-    gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
-    return s;
-  }
-
   function makeTexture() {
     const tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -155,19 +148,36 @@
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
   }
 
+  // 着色器交给显卡在后台编译（KHR_parallel_shader_compile）：编译完之前不去问结果，
+  // 否则浏览器会停下整个页面等它（刚打开时能卡住 200ms 以上）
+  function linked(ext) {
+    return new Promise((resolve) => {
+      if (!ext) { resolve(); return; }
+      const poll = () => (gl.getProgramParameter(program, ext.COMPLETION_STATUS_KHR) ? resolve() : setTimeout(poll, 30));
+      poll();
+    });
+  }
+
   // 创建画布和 WebGL；失败时返回 false，页面保持静态插画
-  function setup() {
+  async function setup() {
     canvas = document.createElement('canvas');
     canvas.className = 'water';
     canvas.setAttribute('aria-hidden', 'true');
     gl = canvas.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'low-power' });
     if (!gl) return false;
     try {
+      const parallel = gl.getExtension('KHR_parallel_shader_compile');
       program = gl.createProgram();
-      gl.attachShader(program, compile(gl.VERTEX_SHADER, VERT));
-      gl.attachShader(program, compile(gl.FRAGMENT_SHADER, FRAG));
+      const vs = gl.createShader(gl.VERTEX_SHADER), fs = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(vs, VERT); gl.compileShader(vs);
+      gl.shaderSource(fs, FRAG); gl.compileShader(fs);
+      gl.attachShader(program, vs);
+      gl.attachShader(program, fs);
       gl.linkProgram(program);
-      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+      await linked(parallel);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(vs) || gl.getShaderInfoLog(fs) || gl.getProgramInfoLog(program));
+      }
     } catch (err) {
       console.warn(err);
       return false;
@@ -222,6 +232,20 @@
     });
   }
 
+  // 先在后台线程把图片解码成 ImageBitmap 再传给显卡。直接传 <img> 时，浏览器会在主线程上
+  // 同步解码整张大图（海景约 1774×887），一张就要卡 100～200ms。图片已在缓存里，这里再取一次不走网络
+  async function decoded(src, el) {
+    if (window.createImageBitmap && window.fetch) {
+      try {
+        const res = await fetch(src);
+        if (!res.ok) throw new Error(res.status);
+        return await createImageBitmap(await res.blob(), { premultiplyAlpha: 'none' });
+      } catch (err) { /* 退回下面的老办法 */ }
+    }
+    return el || loadImage(src);
+  }
+  const release = (bmp) => { if (bmp && bmp.close) bmp.close(); };
+
   function imageReady() {
     if (img.complete && img.naturalWidth) return Promise.resolve();
     return new Promise((resolve) => img.addEventListener('load', resolve, { once: true }));
@@ -236,19 +260,21 @@
     // 换图期间旧纹理与新插画对不上：先停下并淡出画布，新蒙版就绪后再显示
     if (scene) { stop(); scene = null; canvas.classList.remove('is-live'); }
     const def = SCENES[key];
-    let maskImg;
+    let maskImg, picture;
     try {
-      maskImg = await loadImage(def.mask);
+      [maskImg, picture] = await Promise.all([decoded(def.mask), decoded(src, img)]);
     } catch (err) {
       if (sceneKey === src) fallBack(err); // 已被更新的换图取代时不处理
       return;
     }
-    if (sceneKey !== src) return;
+    if (sceneKey !== src) { release(maskImg); if (picture !== img) release(picture); return; }
 
-    scene = { ...def, maskImg };
-    upload(0, textures.image, img);
+    scene = { ...def };
+    upload(0, textures.image, picture);
     upload(1, textures.mask, maskImg);
+    if (picture !== img) release(picture);
     layerSrc = { dusk: '', night: '' }; // 换了桌面/手机版，另外两幅画也要重新取
+    layerPending = { dusk: '', night: '' };
 
     [W, H] = def.grid;
     const c = document.createElement('canvas');
@@ -256,6 +282,7 @@
     const ctx = c.getContext('2d', { willReadFrequently: true });
     ctx.drawImage(maskImg, 0, 0, W, H);
     const px = ctx.getImageData(0, 0, W, H).data;
+    release(maskImg);
     waterMask = new Float32Array(W * H);
     for (let i = 0; i < W * H; i++) waterMask[i] = Math.min(1, px[i * 4] / 200);
     cur = new Float32Array(W * H);
@@ -298,20 +325,34 @@
     LAYERS.forEach((key, k) => {
       const el = t.layers[key];
       const usable = el.complete && el.naturalWidth > 0 && el.currentSrc.includes('mobile') === mobile;
-      if (usable && layerSrc[key] !== el.currentSrc) {
-        upload(3 + k, textures[key], el);
-        layerSrc[key] = el.currentSrc;
-      }
+      if (usable) prepareLayer(key, k, el);
       if (t.weights[k + 1] > 0 && !(usable && layerSrc[key] === el.currentSrc)) ready = false;
     });
     if (ready) setWeights(t.weights);
     return ready;
   }
 
+  // 黄昏、夜晚的插画一下载好就在后台解码、传进纹理，好了再通知重画
+  function prepareLayer(key, k, el) {
+    const src = el.currentSrc;
+    if (layerSrc[key] === src || layerPending[key] === src) return;
+    layerPending[key] = src;
+    const forScene = sceneKey;
+    decoded(src, el).then((bmp) => {
+      if (layerPending[key] !== src || sceneKey !== forScene || gl.isContextLost()) { if (bmp !== el) release(bmp); return; }
+      upload(3 + k, textures[key], bmp);
+      if (bmp !== el) release(bmp);
+      layerSrc[key] = src;
+      layerPending[key] = '';
+      onSeaTime();
+    });
+  }
+
   function onSeaTime() {
     if (!scene || gl.isContextLost()) return;
     if (!canvas.classList.contains('is-live')) { goLive(); return; }
-    if (!syncTime()) { canvas.classList.remove('is-live'); return; } // 极少见：图片还在换，先退回静态叠层
+    // 新插画还在后台解码时先沿用上一组权重（只差几十毫秒），不必为此淡出画布
+    syncTime();
     if (!running) render();
   }
 
@@ -449,10 +490,11 @@
     }
   }
 
-  function start() {
+  async function start() {
     if (canvas) { canvas.hidden = false; update(); return; }
     if (hint && coarse) hint.querySelector('.water-hint-text').textContent = '海面是活的：轻触或划过海面，泛起涟漪';
-    if (!setup()) { canvas = null; return; }
+    if (!(await setup())) { canvas = null; return; }
+    if (reduceMotion.matches) canvas.hidden = true; // 等编译的这段时间里开了「减少动态效果」
 
     // 海景离开可视区域后暂停
     new IntersectionObserver((entries) => {
@@ -500,7 +542,17 @@
     }
   });
 
-  if (!reduceMotion.matches) start();
+  // 页面刚打开的一两秒留给插画和标题的浮现动画：等页面加载完、浮现动画差不多结束、浏览器空闲时再启动水面。
+  // 画布是淡入的，下面一直是同一幅静态插画，晚一点开始动看不出来
+  function whenSettled(fn) {
+    const idle = () => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 1000 }) : setTimeout(fn, 200));
+    let waiting = true;
+    const later = () => { if (waiting) { waiting = false; setTimeout(idle, Math.max(0, 1600 - performance.now())); } };
+    if (document.readyState === 'complete') later();
+    else { window.addEventListener('load', later, { once: true }); setTimeout(later, 4000); } // 网慢、迟迟不 load 时也别等太久
+  }
+
+  if (!reduceMotion.matches) whenSettled(() => { if (!reduceMotion.matches && !canvas) start(); });
 })();
 
 // 偶尔飞过的海鸥：复用 assets/decor/seagull.png，只在天空右侧出现，

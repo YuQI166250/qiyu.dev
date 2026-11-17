@@ -36,7 +36,38 @@
   const ctx = canvas.getContext('2d');
 
   let w = 0, h = 0, dpr = 1, items = [], strength = 0, running = false, visible = false, raf = 0, last = 0;
+  let flake = null, flakeExtent = 0; // 夜里带光晕的雪花，预先画好的小图
   const rand = (a, b) => a + Math.random() * (b - a);
+
+  // 夜里的落叶颜色：等于原来逐片加的 filter: brightness(.7) saturate(.8)，提前算好。
+  // 每片叶子都开一次 canvas filter 非常耗时（打开页面时能卡住好几百毫秒）
+  const nightTone = (hex) => {
+    const n = parseInt(hex.slice(1), 16), c = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    const s = 0.8, m = [
+      [0.213 + 0.787 * s, 0.715 - 0.715 * s, 0.072 - 0.072 * s],
+      [0.213 - 0.213 * s, 0.715 + 0.285 * s, 0.072 - 0.072 * s],
+      [0.213 - 0.213 * s, 0.715 - 0.715 * s, 0.072 + 0.928 * s],
+    ];
+    const out = m.map((row) => Math.round(Math.max(0, Math.min(255, (row[0] * c[0] + row[1] * c[1] + row[2] * c[2]) * 0.7))));
+    return `rgb(${out.join(' ')})`;
+  };
+  const LEAF_COLORS = ['#d9822b', '#c8553d', '#e0b13c', '#b5672f', '#9e7b2f'];
+  const LEAF_NIGHT = Object.fromEntries(LEAF_COLORS.map((c) => [c, nightTone(c)]));
+  const VEIN = 'rgba(80, 45, 20, .35)', VEIN_NIGHT = `rgb(${nightTone('#502d14').slice(4, -1)} / .35)`;
+
+  // 夜里的雪花：白点加一圈月白色光晕。原来每片每帧都用 shadowBlur 现画，很耗；
+  // 现在按当前像素密度画一张参考大小（半径 2.4）的小图，每片按自己的大小缩放贴上去
+  function makeFlake() {
+    const R = 2.4, blur = 6; // blur 和原来的 shadowBlur 一样按设备像素算
+    flakeExtent = R + 12 / dpr;
+    const c = document.createElement('canvas');
+    c.width = c.height = Math.ceil(flakeExtent * 2 * dpr);
+    const g = c.getContext('2d');
+    g.fillStyle = '#f4f7ff';
+    g.shadowColor = 'rgba(220, 230, 255, .9)'; g.shadowBlur = blur;
+    g.beginPath(); g.arc(c.width / 2, c.height / 2, R * dpr, 0, Math.PI * 2); g.fill();
+    flake = c;
+  }
   const timeNow = () => document.documentElement.dataset.time || 'day';
 
   function size() {
@@ -44,6 +75,7 @@
     dpr = Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2);
     w = r.width; h = r.height;
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    if (season === 'winter') makeFlake();
     const want = Math.round(DENSITY * Math.min(1.6, (w * h) / (1440 * 900)) * (coarse ? 0.7 : 1)) + 4;
     while (items.length < want) items.push(spawn(true));
     items.length = want;
@@ -55,7 +87,7 @@
     if (season === 'winter') Object.assign(p, { r: rand(1.2, 3.4), vy: rand(16, 38), sway: rand(6, 18), swaySpeed: rand(0.3, 0.8), a: rand(0.6, 1) });
     if (season === 'spring') Object.assign(p, { r: rand(6, 10), vy: rand(18, 34), vx: rand(8, 22), spin: rand(-1.2, 1.2), flip: rand(1.2, 2.6), hue: rand(338, 356), light: rand(84, 92) });
     if (season === 'autumn') Object.assign(p, { r: rand(9, 15), vy: rand(24, 44), vx: rand(-10, 14), spin: rand(-1.6, 1.6), flip: rand(1, 2.2),
-      color: ['#d9822b', '#c8553d', '#e0b13c', '#b5672f', '#9e7b2f'][Math.floor(Math.random() * 5)] });
+      color: LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)] });
     if (season === 'summer') Object.assign(p, { x: rand(0.05, 0.95) * w, y: rand(0.45, 0.92) * h, r: rand(1.4, 2.6), vx: rand(-8, 8), vy: rand(-6, 6),
       blink: rand(0.6, 1.4), wander: rand(0.4, 1.1) });
     return p;
@@ -79,13 +111,13 @@
     }
   }
 
-  function leaf(r) { // 一片小叶子：两段弧线合成的尖头叶形
+  function leaf(r, night) { // 一片小叶子：两段弧线合成的尖头叶形
     ctx.beginPath();
     ctx.moveTo(0, -r);
     ctx.quadraticCurveTo(r * 0.75, -r * 0.1, 0, r);
     ctx.quadraticCurveTo(-r * 0.75, -r * 0.1, 0, -r);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(80, 45, 20, .35)'; ctx.lineWidth = 0.6;
+    ctx.strokeStyle = night ? VEIN_NIGHT : VEIN; ctx.lineWidth = 0.6;
     ctx.beginPath(); ctx.moveTo(0, -r * 0.8); ctx.lineTo(0, r * 0.9); ctx.stroke();
   }
 
@@ -99,10 +131,13 @@
       const fade = Math.min(1, p.age / 1.2) * strength;
       if (season === 'winter') {
         ctx.globalAlpha = p.a * fade;
-        ctx.fillStyle = night ? '#f4f7ff' : '#ffffff';
-        if (night) { ctx.shadowColor = 'rgba(220, 230, 255, .9)'; ctx.shadowBlur = 6; }
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
-        ctx.shadowBlur = 0;
+        if (night && flake) {
+          const e = flakeExtent * (p.r / 2.4);
+          ctx.drawImage(flake, p.x - e, p.y - e, e * 2, e * 2);
+        } else {
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+        }
       } else if (season === 'summer') {
         const glow = 0.5 + 0.5 * Math.sin(t * p.blink * 2.2 + p.phase);
         ctx.globalAlpha = fade * (0.15 + 0.85 * glow * glow);
@@ -120,10 +155,8 @@
           ctx.fillStyle = `hsl(${p.hue} 70% ${night ? p.light - 22 : p.light}%)`;
           ctx.beginPath(); ctx.ellipse(0, 0, p.r * 0.62, p.r, 0, 0, Math.PI * 2); ctx.fill();
         } else {
-          ctx.fillStyle = p.color;
-          if (night) ctx.filter = 'brightness(.7) saturate(.8)';
-          leaf(p.r);
-          ctx.filter = 'none';
+          ctx.fillStyle = night ? LEAF_NIGHT[p.color] : p.color;
+          leaf(p.r, night);
         }
         ctx.restore();
       }
@@ -153,7 +186,16 @@
   size();
   if ('ResizeObserver' in window) new ResizeObserver(size).observe(figure);
   else addEventListener('resize', size);
-  new IntersectionObserver((entries) => { visible = entries[entries.length - 1].isIntersecting; update(); }).observe(figure);
+  // 页面刚打开的一两秒留给插画和标题的浮现动画，之后浏览器空闲时再开始飘（每片本来就是淡入的）
+  const begin = () => new IntersectionObserver((entries) => { visible = entries[entries.length - 1].isIntersecting; update(); }).observe(figure);
+  let waiting = true;
+  const later = () => {
+    if (!waiting) return;
+    waiting = false;
+    setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(begin, { timeout: 1000 }) : begin()), Math.max(0, 1600 - performance.now()));
+  };
+  if (document.readyState === 'complete') later();
+  else { addEventListener('load', later, { once: true }); setTimeout(later, 4000); }
   document.addEventListener('visibilitychange', update);
   reduceMotion.addEventListener('change', update);
 })();
