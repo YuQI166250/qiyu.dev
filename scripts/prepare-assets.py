@@ -20,7 +20,6 @@ COPY = [
     "hero/hero-seaside-desktop.webp",
     "covers/sea-cover.webp",
     "covers/breeze-cover-temp.webp",
-    "decor/lemon-branch.png",
     "decor/seagull.png",
     "decor/sailboat.png",
     "decor/watercolor-cloud.png",
@@ -43,9 +42,6 @@ RESIZE = [
 # V3 素材：(源文件, 输出文件, 裁切框或 None, 是否清除边缘底色)
 # 裁切框用来去掉拼版时压进来的相邻物件；清除底色从图片边缘向内泛洪，遇到纸张较深的毛边即停止。
 V3 = [
-    ("travel/coastal-postcard.png", "journal/postcard.webp", (6, 0, 385, 280), True),
-    ("travel/folded-map.png", "journal/map.webp", (14, 0, 373, 444), True),
-    ("travel/blue-washi-tape.png", "journal/washi-tape.webp", None, False),
     ("ocean/standing-seagull.png", "decor/perched-gull.webp", (0, 0, 240, 194), False),  # 只留到脚下，见 feet_only
 ]
 

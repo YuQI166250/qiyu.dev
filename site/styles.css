@@ -669,7 +669,7 @@ figure { margin: 0; }
 @media (max-width: 720px) {
   .blog { grid-template-columns: minmax(0, 1fr); }
   .blog-main, .blog-side { grid-column: 1; grid-row: auto; }
-  /* 窄屏：单列，文章在前，侧栏卡片排在后面一张一行（关于我、分类、热门标签、最近更新都在）；文章目录收起 */
+  /* 窄屏：单列，文章在前，侧栏卡片排在后面（留哪几张见下面「回到顶部」前的说明）；文章目录收起 */
   .toc { display: none; }
 }
 @media (max-width: 640px) {
@@ -890,7 +890,9 @@ figure { margin: 0; }
 .profile-card .profile-bio { margin: 4px 0 12px; }
 
 @media (max-width: 720px) {
-  /* 窄屏：文章在前，「关于我」和侧栏卡片排在文章后面，打开就能看到文章 */
+  /* 窄屏：文章在前，「关于我」和侧栏卡片排在文章后面，打开就能看到文章。
+     分类、标签顶部导航里就有，这里不再重复；首页的文章列表本身就是最近更新，所以首页只留「关于我」 */
+  .side-cats, .side-tags, .blog:has(.post-card) .side-latest { display: none; }
   .blog { display: flex; flex-direction: column; align-items: stretch; } /* 两栏时的 align-items: start 会让单列卡片按内容缩窄 */
 }
 
@@ -914,6 +916,8 @@ figure { margin: 0; }
 
 /* 博客区背后铺几团很淡的水彩晕染（跟着时间变色），卡片浮在上面，不再是一整片素色 */
 .blog { position: relative; isolation: isolate; }
+/* 晕染左右各伸出 12vw，在窗口边缘裁掉：不然手机上页面会被撑宽、整页缩小一点（clip 不影响 sticky） */
+main { overflow-x: clip; }
 .blog::before {
   content: ""; position: absolute; z-index: -1; inset: -60px -12vw -40px; pointer-events: none;
   background:

@@ -72,46 +72,12 @@
   // weights：白天、黄昏、夜晚各占多少，三者之和为 1。叠层透明度由它换算，保证画面就是三幅画的加权平均。
   let weights = [1, 0, 0], current = 'day', wanted = 'day', anim = 0;
 
-  // ---------- 手账的色调 ----------
-  // 3×3 颜色矩阵（sRGB），写法与 CSS 的 sepia() / saturate() / brightness() 定义一致，可以按权重直接线性混合。
-  const mul = (a, b) => a.map((row) => [0, 1, 2].map((j) => row[0] * b[0][j] + row[1] * b[1][j] + row[2] * b[2][j]));
-  const diag = (r, g, b) => [[r, 0, 0], [0, g, 0], [0, 0, b]];
-  const saturate = (s) => [
-    [0.213 + 0.787 * s, 0.715 - 0.715 * s, 0.072 - 0.072 * s],
-    [0.213 - 0.213 * s, 0.715 + 0.285 * s, 0.072 - 0.072 * s],
-    [0.213 - 0.213 * s, 0.715 - 0.715 * s, 0.072 + 0.928 * s],
-  ];
-  const sepia = (a) => {
-    const k = 1 - a;
-    return [
-      [0.393 + 0.607 * k, 0.769 - 0.769 * k, 0.189 - 0.189 * k],
-      [0.349 - 0.349 * k, 0.686 + 0.314 * k, 0.168 - 0.168 * k],
-      [0.272 - 0.272 * k, 0.534 - 0.534 * k, 0.131 + 0.869 * k],
-    ];
-  };
-  const TONE = [
-    diag(1, 1, 1),
-    mul(diag(0.99, 0.99, 0.99), mul(saturate(1.06), sepia(0.1))), // 黄昏：微暖
-    mul(diag(0.80, 0.84, 0.92), saturate(0.68)),                  // 夜晚：更暗、更淡，红绿压得比蓝多一点，带一丝冷意
-  ];
-  const journal = document.querySelector('.journal');
-  const toneMatrix = document.querySelector('#time-tone feColorMatrix');
-
-  function tone(w) {
-    if (!journal || !toneMatrix) return;
-    if (w[0] > 0.999) { journal.style.filter = ''; return; } // 白天保持原样，不加滤镜
-    const m = TONE.reduce((acc, t, i) => acc.map((row, r) => row.map((v, c) => v + t[r][c] * w[i])), diag(0, 0, 0));
-    toneMatrix.setAttribute('values', m.map((row) => row.map((v) => v.toFixed(4)).join(' ') + ' 0 0').join(' ') + ' 0 0 0 1 0');
-    journal.style.filter = 'url(#time-tone)';
-  }
-
   function apply(w) {
     weights = w;
     const night = w[2];
     const dusk = night < 0.999 ? w[1] / (1 - night) : 0;
     layers.night.img.style.opacity = layers.night.loading ? night.toFixed(4) : '0';
     layers.dusk.img.style.opacity = layers.dusk.loading ? dusk.toFixed(4) : '0';
-    tone(w);
     notify();
   }
 
